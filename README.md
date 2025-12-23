@@ -70,7 +70,7 @@ local ESP = Library.ESPs
 ESP.identificador:SetColor(Color3.fromRGB(0, 0, 211))
 ESP.identificador:SetName("Novo nome")
 ESP.identificador:SetSuffixDistance("Novo Suffix")
-ESP.identificador:SetPrefixDistance(Novo Prefix")
+ESP.identificador:SetPrefixDistance("Novo Prefix")
 ```
 
 ### Remove
