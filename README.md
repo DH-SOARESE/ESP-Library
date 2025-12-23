@@ -412,7 +412,10 @@ A biblioteca usa funções seguras para compatibilidade:
 
 - **Repositório:** [GitHub](https://github.com/DH-SOARESE/ESP-Library)
 - **Source:** [Source.lua](https://github.com/DH-SOARESE/ESP-Library/blob/main/Source.lua)
-
+- **Example** [Example.lua](https://github.com/DH-SOARESE/ESP-Library/blob/main/Example.lua)
+```luau
+loadstring(game:HttpGet("https://raw.githubusercontent.com/DH-SOARESE/ESP-Library/main/Example.lua"))()
+```
 ---
 
 **Nota:** Para exemplos práticos de implementação e casos de uso específicos, consulte o arquivo `examples.lua` no repositório.
