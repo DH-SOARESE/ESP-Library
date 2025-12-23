@@ -411,7 +411,7 @@ A biblioteca usa funções seguras para compatibilidade:
 ## 🔗 Links
 
 - **Repositório:** [GitHub](https://github.com/DH-SOARESE/ESP-Library)
-- **Source:** [Source.lua](https://raw.githubusercontent.com/DH-SOARESE/ESP-Library/main/Source.lua)
+- **Source:** [Source.lua](https://github.com/DH-SOARESE/ESP-Library/blob/main/Source.lua)
 
 ---
 
