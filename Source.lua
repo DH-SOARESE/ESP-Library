@@ -45,7 +45,7 @@ local Library = {
         Arrow = true
     },
     Settings = {
-        TracerOrigin = "Top",
+        TracerOrigin = "Bottom",
         
         MaxDistance = math.huge,
         MinDistance = 5,
