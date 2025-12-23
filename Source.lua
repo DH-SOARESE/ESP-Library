@@ -27,6 +27,11 @@ local assert = function(condition, errorMessage)
     end
 end
 
+local ArrowMain = Instance.new("ScreenGui")
+ArrowMain.Parent = GetHUI()
+ArrowMain.IgnoreGuiInset = true
+ArrowMain.DisplayOrder = 3
+
 local ESPs = {}
 
 local Library = {
@@ -37,20 +42,33 @@ local Library = {
         Distance = true,
         Outline = true,
         Filled = true,
+        Arrow = true
     },
     Settings = {
-        HighlightTransparency = {
-            Filled = 0.7,
-            Outline = 0.3
-        },
         TracerOrigin = "Top",
+        
         MaxDistance = math.huge,
         MinDistance = 5,
+        
         Decimal = false,
         FontSize = 10,
         Font = 2,
+        
         Rainbow = false,
         RainbowDelay = 8,
+        
+        Arrow = {
+            Image = 92023845052369,
+            Size = UDim2.new(0, 40, 0, 40),
+            Rotation = 90,
+            Radius = 360,
+            Range = 90
+        },
+        
+        HighlightTransparency = {
+            Filled = 0.7,
+            Outline = 0.3
+        }
     },
     Template = {
         Add = {
@@ -59,6 +77,7 @@ local Library = {
             Color = Color3.fromRGB(0, 50, 233)
         }
     },
+    
     ESPs = ESPs
 }
 
@@ -70,7 +89,7 @@ local Origin = {
     Right = function(vs) return Vector2.new(vs.X, vs.Y / 2) end,
 }
 
-function Library:New(Class: string, properties: table?)
+local function New(Class: string, properties: table?)
     local Instance_ = Instance.new(Class)
     if properties then
         for k, v in pairs(properties) do
@@ -82,7 +101,7 @@ function Library:New(Class: string, properties: table?)
     return Instance_
 end
 
-function Library:NewDrawing(class, props)
+local function NewDrawing(class, props)
     local obj = Drawing.new(class)
     if props then
         for k, v in pairs(props) do
@@ -96,7 +115,8 @@ end
 
 function Library:Add(idx, info)
     assert(info.Model and typeof(info.Model) == "Instance", "Alvo inválido!")
-
+    assert(not ESPs[idx], "ESP Já existe nesse alvo!")
+    
     local ESP = {
         Model = info.Model,
         Name = info.Name or info.Model.Name,
@@ -105,13 +125,14 @@ function Library:Add(idx, info)
         Color = info.Color or self.Template.Add.Color
     }
 
-    ESP.Tracer = self:NewDrawing("Line", { 
-        Color = ESP.Color, 
+    ESP.Tracer = NewDrawing("Line", { 
+        Color = ESP.Color,
         Thickness = 1,
         Visible = false 
     })
-    ESP.TextDraw = self:NewDrawing("Text", { 
-        Text = ESP.Name or "'",
+    
+    ESP.TextDraw = NewDrawing("Text", { 
+        Text = ESP.Name or "",
         Size = self.Settings.FontSize,
         Font = self.Settings.Font,
         Color = ESP.Color,
@@ -119,7 +140,8 @@ function Library:Add(idx, info)
         Outline = true, 
         Visible = false
     })
-    ESP.Highlight = self:New("Highlight", {
+    
+    ESP.Highlight = New("Highlight", {
         Adornee = ESP.Model,
         FillColor = ESP.Color,
         OutlineColor = ESP.Color,
@@ -129,9 +151,16 @@ function Library:Add(idx, info)
         Parent = GetHUI()
     })
     
+    ESP.Arrow = New("ImageLabel", {
+        BackgroundTransparency = 1,
+        Size = self.Settings.Arrow.Size,
+        Image = "rbxassetid://" .. tostring(self.Settings.Arrow.Image),
+        Parent = ArrowMain
+    })
+    
     if info.Collision then
         if not ESP.Model:FindFirstChildWhichIsA("Humanoid", false) then
-            self:New("Humanoid", { 
+            New("Humanoid", { 
                 Name = "ESP",
                 Parent = ESP.Model
             })
@@ -141,18 +170,18 @@ function Library:Add(idx, info)
                 obj.Transparency = 0.99
             end
         end
-    else
-        ESP.Model:FindFirstChild("ESP"):Destroy()
     end    
     
     function ESP:SetColor(color: Color3)
         self.Color = color
         if self.Tracer then self.Tracer.Color = color end
         if self.TextDraw then self.TextDraw.Color = color end
+        if self.Box then self.Box.Color = color end
         if self.Highlight then
             self.Highlight.FillColor = color
             self.Highlight.OutlineColor = color
         end
+        if self.Arrow then self.Arrow.ImageColor3 = color end
     end
 
     function ESP:SetName(New: string?)
@@ -170,11 +199,11 @@ function Library:Add(idx, info)
     return ESP
 end
 
-function Library:SetTemplete(idx, info: table?)
+function Library:SetTemplate(idx, info: table?)
     self.Template[idx] = info
 end
 
-function Library:Readjustment(idx, info: table?)
+function Library:Update(idx, info: table?)
     assert(ESPs[idx], "Erro: valor esperado não existe")
     assert(typeof(info) == "table", "Erro: 'info' precisa ser uma table")
     
@@ -185,9 +214,11 @@ end
 
 function Library:Remove(idx)
     if ESPs[idx] then
-        if ESPs[idx]Tracer then ESPs[idx]Tracer:Remove() end
-        if ESPs[idx]TextDraw then ESPs[idx]TextDraw:Remove() end
-        if ESPs[idx]Highlight then ESPs[idx]Highlight:Destroy() end
+        if ESPs[idx].Tracer then ESPs[idx].Tracer:Remove() end
+        if ESPs[idx].TextDraw then ESPs[idx].TextDraw:Remove() end
+        if ESPs[idx].Box then ESPs[idx].Box:Remove() end
+        if ESPs[idx].Highlight then ESPs[idx].Highlight:Destroy() end
+        if ESPs[idx].Arrow then ESPs[idx].Arrow:Destroy() end
         ESPs[idx] = nil
     end
 end
@@ -230,12 +261,16 @@ end
 
 function Library:Clear()
     for idx, ESP in pairs(ESPs) do
-        if ESP then
-            if ESP.Tracer then ESP.Tracer:Remove() end
-            if ESP.TextDraw then ESP.TextDraw:Remove() end
-            if ESP.Highlight then ESP.Highlight:Destroy() end
-            ESPs[idx] = nil
-        end
+        self:Remove(idx)
+    end
+end
+
+function Library:RainbowMode(state, delay)
+    if typeof(state) == "boolean" then
+        self.Settings.Rainbow = state
+    end
+    if typeof(delay) == "number" then
+        self.Settings.RainbowDelay = delay
     end
 end
 
@@ -250,6 +285,7 @@ RunService.RenderStepped:Connect(function()
             if ESP.Tracer then ESP.Tracer.Visible = false end
             if ESP.TextDraw then ESP.TextDraw.Visible = false end
             if ESP.Highlight then ESP.Highlight.Enabled = false end
+            if ESP.Arrow then ESP.Arrow.Visible = false end
             continue
         end
 
@@ -258,73 +294,95 @@ RunService.RenderStepped:Connect(function()
             if ESP.Tracer then ESP.Tracer.Visible = false end
             if ESP.TextDraw then ESP.TextDraw.Visible = false end
             if ESP.Highlight then ESP.Highlight.Enabled = false end
+            if ESP.Arrow then ESP.Arrow.Visible = false end
             continue
         end
 
-        local pos3d, onScreen = Camera:WorldToViewportPoint(targetPos)
-        local depth = pos3d.Z
+        local pos3d = Camera:WorldToViewportPoint(targetPos)
         local dist = (targetPos - cameraPos).Magnitude
 
-        if not onScreen or dist > Library.Settings.MaxDistance or dist < Library.Settings.MinDistance then
+        if dist > Library.Settings.MaxDistance or dist < Library.Settings.MinDistance then
             if ESP.Tracer then ESP.Tracer.Visible = false end
             if ESP.TextDraw then ESP.TextDraw.Visible = false end
             if ESP.Highlight then ESP.Highlight.Enabled = false end
+            if ESP.Arrow then ESP.Arrow.Visible = false end
             continue
         end
 
         local pos = Vector2.new(pos3d.X, pos3d.Y)
+        local center = Vector2.new(vs.X / 2, vs.Y / 2)
+        local dir = pos - center
+        local mag = dir.Magnitude
 
-        -- Handle rainbow mode
+        local inFront = pos3d.Z > 0
+        local onScreen = pos.X >= 0 and pos.X <= vs.X and pos.Y >= 0 and pos.Y <= vs.Y
+        local within_fov = inFront and onScreen and (mag <= Library.Settings.Arrow.Radius)
+
         local currentColor = ESP.Color
         if Library.Settings.Rainbow then
             local hue = (tick() % Library.Settings.RainbowDelay) / Library.Settings.RainbowDelay
             currentColor = Color3.fromHSV(hue, 1, 1)
-            if ESP.Tracer then ESP.Tracer.Color = currentColor end
-            if ESP.TextDraw then ESP.TextDraw.Color = currentColor end
-            if ESP.Highlight then
-                ESP.Highlight.FillColor = currentColor
-                ESP.Highlight.OutlineColor = currentColor
-            end
         end
 
         if ESP.Highlight then
             ESP.Highlight.FillTransparency = Library.Config.Filled and Library.Settings.HighlightTransparency.Filled or 1
             ESP.Highlight.OutlineTransparency = Library.Config.Outline and Library.Settings.HighlightTransparency.Outline or 1
-            ESP.Highlight.Enabled = Library.Enabled
+            ESP.Highlight.Enabled = Library.Enabled and within_fov
+            ESP.Highlight.FillColor = currentColor
+            ESP.Highlight.OutlineColor = currentColor
         end
 
-        if Library.Config.Tracer and ESP.Tracer and Library.Enabled then
-            local originPos = (Origin[Library.Settings.TracerOrigin] or Origin.Bottom)(vs)
-            ESP.Tracer.From = originPos
-            ESP.Tracer.To = pos
-            ESP.Tracer.Visible = true
-        elseif ESP.Tracer then
-            ESP.Tracer.Visible = false
-        end
-
-        local textVisible = onScreen and Library.Enabled
-
-        if (Library.Config.Name or Library.Config.Distance) and ESP.TextDraw and textVisible then
-            local text = ""
-            if Library.Config.Name then
-                text = ESP.Name
+        if within_fov then
+            if Library.Config.Tracer and ESP.Tracer and Library.Enabled then
+                local originPos = (Origin[Library.Settings.TracerOrigin] or Origin.Bottom)(vs)
+                ESP.Tracer.From = originPos
+                ESP.Tracer.To = pos
+                ESP.Tracer.Color = currentColor
+                ESP.Tracer.Visible = true
+            elseif ESP.Tracer then
+                ESP.Tracer.Visible = false
             end
-            if Library.Config.Distance then
-                local distText = ESP.PrefixDistance .. (Library.Settings.Decimal and string.format("%.1f", dist) or math.floor(dist)) .. ESP.SuffixDistance
-                if text ~= "" then
-                    text = text .. "\n" .. distText
-                else
-                    text = distText
+            if ESP.TextDraw then
+                local text = ""
+                if Library.Config.Name then
+                    text = ESP.Name
                 end
+                if Library.Config.Distance then
+                    local distText = ESP.PrefixDistance .. (Library.Settings.Decimal and string.format("%.1f", dist) or math.floor(dist)) .. ESP.SuffixDistance
+                    if text ~= "" then text = text.."\n"..distText else text = distText end
+                end
+                ESP.TextDraw.Text = text
+                ESP.TextDraw.Font = Library.Settings.Font
+                ESP.TextDraw.Size = Library.Settings.FontSize
+                ESP.TextDraw.Position = pos + Vector2.new(0, -ESP.TextDraw.TextBounds.Y - 5)
+                ESP.TextDraw.Color = currentColor
+                ESP.TextDraw.Visible = true
             end
-            ESP.TextDraw.Text = text
-            ESP.TextDraw.Font = Library.Settings.Font
-            ESP.TextDraw.Size = Library.Settings.FontSize
-            local bounds = ESP.TextDraw.TextBounds
-            ESP.TextDraw.Position = pos + Vector2.new(0, - (bounds.Y / 2))
-            ESP.TextDraw.Visible = true
-        elseif ESP.TextDraw then
-            ESP.TextDraw.Visible = false
+
+            if ESP.Arrow then
+                ESP.Arrow.Visible = false
+            end
+        else
+            if ESP.Tracer then ESP.Tracer.Visible = false end
+            if ESP.TextDraw then ESP.TextDraw.Visible = false end
+
+            if Library.Config.Arrow and ESP.Arrow and Library.Enabled then
+                local arrowDir = inFront and dir or -dir
+                local normalizedDir = mag > 0 and (arrowDir / mag) or Vector2.new(0, 1)
+                local arrowPos = center + normalizedDir * Library.Settings.Arrow.Range
+                ESP.Arrow.Position = UDim2.fromOffset(
+                    arrowPos.X - (Library.Settings.Arrow.Size.X.Offset/2),
+                    arrowPos.Y - (Library.Settings.Arrow.Size.Y.Offset/2)
+                )
+                local angle = math.atan2(normalizedDir.Y, normalizedDir.X)
+                ESP.Arrow.Rotation = math.deg(angle) + Library.Settings.Arrow.Rotation
+                ESP.Arrow.Image = "rbxassetid://"..tostring(Library.Settings.Arrow.Image)
+                ESP.Arrow.ImageColor3 = currentColor
+                ESP.Arrow.Size = Library.Settings.Arrow.Size
+                ESP.Arrow.Visible = true
+            elseif ESP.Arrow then
+                ESP.Arrow.Visible = false
+            end
         end
     end
 end)
