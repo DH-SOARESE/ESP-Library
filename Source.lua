@@ -107,7 +107,7 @@ function Library:Add(idx, info)
 
     ESP.Tracer = self:NewDrawing("Line", { 
         Color = ESP.Color, 
-        Thickness = 5,
+        Thickness = 1,
         Visible = false 
     })
     ESP.TextDraw = self:NewDrawing("Text", { 
@@ -141,7 +141,10 @@ function Library:Add(idx, info)
                 obj.Transparency = 0.99
             end
         end
+    else
+        ESP.Model:FindFirstChild("ESP"):Destroy()
     end    
+    
     function ESP:SetColor(color: Color3)
         self.Color = color
         if self.Tracer then self.Tracer.Color = color end
@@ -152,26 +155,26 @@ function Library:Add(idx, info)
         end
     end
 
-    function ESP:SetName(New: string)
+    function ESP:SetName(New: string?)
         self.Name = New
     end
 
-    function ESP:SetSuffixDistance(New: string)
+    function ESP:SetSuffixDistance(New: string?)
         self.SuffixDistance = New
     end
 
-    function ESP:SetPrefixDistance(New: string)
+    function ESP:SetPrefixDistance(New: string?)
         self.PrefixDistance = New
     end    
     ESPs[(typeof(idx) == "string" and idx or ESP.Model)] = ESP
     return ESP
 end
 
-function Library:SetTemplete(idx,info)
+function Library:SetTemplete(idx, info: table?)
     self.Template[idx] = info
 end
 
-function Library:Readjustment(idx, info)
+function Library:Readjustment(idx, info: table?)
     assert(ESPs[idx], "Erro: valor esperado não existe")
     assert(typeof(info) == "table", "Erro: 'info' precisa ser uma table")
     
@@ -181,40 +184,35 @@ function Library:Readjustment(idx, info)
 end
 
 function Library:Remove(idx)
-    local ESP = ESPs[idx]
-    if ESP then
-        if ESP.Tracer then ESP.Tracer:Remove() end
-        if ESP.TextDraw then ESP.TextDraw:Remove() end
-        if ESP.Highlight then ESP.Highlight:Destroy() end
+    if ESPs[idx] then
+        if ESPs[idx]Tracer then ESPs[idx]Tracer:Remove() end
+        if ESPs[idx]TextDraw then ESPs[idx]TextDraw:Remove() end
+        if ESPs[idx]Highlight then ESPs[idx]Highlight:Destroy() end
         ESPs[idx] = nil
     end
 end
 
 function Library:SetColor(idx, New: Color3?)
-    local ESP = ESPs[idx]
-    if ESP then
-        ESP:SetColor(New)
+    if ESPs[idx] then
+        ESPs[idx]:SetColor(New)
     end
 end
 
 function Library:SetName(idx, New: string?)
-    local ESP = ESPs[idx]
-    if ESP then
-        ESP:SetName(New)
+    if ESPs[idx] then
+        ESPs[idx]:SetName(New)
     end
 end
 
 function Library:SetPrefixDistance(idx, New: string?)
-    local ESP = ESPs[idx]
-    if ESP then
-        ESP:SetPrefixDistance(New)
+    if ESPs[idx] then
+        ESPs[idx]:SetPrefixDistance(New)
     end
 end
 
 function Library:SetSuffixDistance(idx, New: string?)
-    local ESP = ESPs[idx]
-    if ESP then
-        ESP:SetSuffixDistance(New)
+    if ESPs[idx] then
+        ESPs[idx]:SetSuffixDistance(New)
     end
 end
 
