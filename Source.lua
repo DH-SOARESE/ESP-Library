@@ -13,7 +13,11 @@ end)
 
 local LocalPlayer = Players.LocalPlayer
 local Camera = Workspace.CurrentCamera
-Workspace:GetPropertyChangedSignal("CurrentCamera"):Connect(function()
+
+local CamConnect
+local RunConnect
+
+CamConnect = Workspace:GetPropertyChangedSignal("CurrentCamera"):Connect(function()
     Camera = Workspace.CurrentCamera
 end)
 
@@ -36,8 +40,10 @@ local ESPs = {}
 
 local Library = {
     Enabled = true,
+    Unloaded = false,
+    
     Config = {
-        Tracer = true,
+        Tracer = false,
         Name = true,
         Distance = true,
         Outline = true,
@@ -81,6 +87,23 @@ local Library = {
     ESPs = ESPs
 }
 
+function Library:Destroy()
+    Library:Clear()
+    if CamConnect then
+        CamConnect:Disconnect()
+        CamConnect = nil
+    end
+    if RunConnect then
+        RunConnect:Disconnect()
+        RunConnect = nil
+    end
+    if ArrowMain then
+        ArrowMain:Destroy()
+        ArrowMain = nil
+    end
+    self = { Unloaded = true }
+end
+
 local Origin = {
     Top = function(vs) return Vector2.new(vs.X / 2, 0) end,
     Center = function(vs) return Vector2.new(vs.X / 2, vs.Y / 2) end,
@@ -102,26 +125,27 @@ local function New(Class: string, properties: table?)
 end
 
 local function NewDrawing(class, props)
-    local obj = Drawing.new(class)
+    local Draw = Drawing.new(class)
     if props then
         for k, v in pairs(props) do
             pcall(function()
-                obj[k] = v
+                Draw[k] = v
             end)
         end
     end
-    return obj
+    return Draw
 end
 
 function Library:Add(idx, info)
+    if self.Unloaded then return end
     assert(info.Model and typeof(info.Model) == "Instance", "Alvo inválido!")
     assert(not ESPs[idx], "ESP Já existe nesse alvo!")
-    
     local ESP = {
         Model = info.Model,
         Name = info.Name or info.Model.Name,
         SuffixDistance = info.SuffixDistance or self.Template.Add.SuffixDistance,
         PrefixDistance = info.PrefixDistance or self.Template.Add.PrefixDistance,
+        Center = if info.Center and info.Center:IsA("BasePart") then info.Center else nil,
         Color = info.Color or self.Template.Add.Color
     }
 
@@ -155,6 +179,7 @@ function Library:Add(idx, info)
         BackgroundTransparency = 1,
         Size = self.Settings.Arrow.Size,
         Image = "rbxassetid://" .. tostring(self.Settings.Arrow.Image),
+        Visible = false,
         Parent = ArrowMain
     })
     
@@ -204,6 +229,7 @@ function Library:SetTemplate(idx, info: table?)
 end
 
 function Library:Update(idx, info: table?)
+    if self.Unloaded then return end
     assert(ESPs[idx], "Erro: valor esperado não existe")
     assert(typeof(info) == "table", "Erro: 'info' precisa ser uma table")
     
@@ -274,7 +300,7 @@ function Library:RainbowMode(state, delay)
     end
 end
 
-RunService.RenderStepped:Connect(function()
+RunConnect = RunService.RenderStepped:Connect(function()
     if not Camera then return end
     local vs = Camera.ViewportSize
     local cameraPos = Camera.CFrame.Position
@@ -289,7 +315,7 @@ RunService.RenderStepped:Connect(function()
             continue
         end
 
-        local targetPos = target:IsA("Model") and target.PrimaryPart and target.PrimaryPart.Position or target.Position
+        local targetPos = if ESP.Center then ESP.Center.Position else target:IsA("Model") and target.PrimaryPart and target.PrimaryPart.Position or target.Position
         if not targetPos then
             if ESP.Tracer then ESP.Tracer.Visible = false end
             if ESP.TextDraw then ESP.TextDraw.Visible = false end
