@@ -55,6 +55,7 @@ Library:Add(workspace.NPC, {
 - `Color` (opcional): Cor do ESP (padrão: valor do Template)
 - `PrefixDistance` (opcional): Prefixo da distância (ex: "[")
 - `SuffixDistance` (opcional): Sufixo da distância (ex: "m]")
+- `Center` (opcional): BasePart usado como ponto central do alvo.
 - `Collision` (opcional): Adiciona Humanoid e ajusta transparência para colisão
 
 ### Remover ESP
@@ -174,6 +175,13 @@ Library:RainbowMode(false)
 Library:RainbowMode(false, 8)
 ```
 
+# Unload
+
+Para descarregar a library e liberar recursos:
+
+```lua
+Library:Destroy()
+```
 ---
 
 ## ⚙️ Configurações Globais
