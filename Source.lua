@@ -136,6 +136,60 @@ local function NewDrawing(class, props)
     return Draw
 end
 
+function Library:GetBoundingBox(root: Instance?)
+    if not root then return end
+
+    if root:IsA("BasePart") then
+        return root.CFrame, root.Size
+    elseif root:IsA("Model") then
+        local primary = root.PrimaryPart or root:FindFirstChildWhichIsA("BasePart")
+        if not primary then return end
+        
+        local cframe, size
+        local parts = root:GetDescendants()
+        local minVec, maxVec
+
+        for _, part in pairs(parts) do
+            if part:IsA("BasePart") then
+                local corners = {
+                    part.Position + Vector3.new( part.Size.X/2,  part.Size.Y/2,  part.Size.Z/2),
+                    part.Position + Vector3.new( part.Size.X/2,  part.Size.Y/2, -part.Size.Z/2),
+                    part.Position + Vector3.new( part.Size.X/2, -part.Size.Y/2,  part.Size.Z/2),
+                    part.Position + Vector3.new( part.Size.X/2, -part.Size.Y/2, -part.Size.Z/2),
+                    part.Position + Vector3.new(-part.Size.X/2,  part.Size.Y/2,  part.Size.Z/2),
+                    part.Position + Vector3.new(-part.Size.X/2,  part.Size.Y/2, -part.Size.Z/2),
+                    part.Position + Vector3.new(-part.Size.X/2, -part.Size.Y/2,  part.Size.Z/2),
+                    part.Position + Vector3.new(-part.Size.X/2, -part.Size.Y/2, -part.Size.Z/2),
+                }
+
+                for _, corner in pairs(corners) do
+                    if not minVec then
+                        minVec = corner
+                        maxVec = corner
+                    else
+                        minVec = Vector3.new(
+                            math.min(minVec.X, corner.X),
+                            math.min(minVec.Y, corner.Y),
+                            math.min(minVec.Z, corner.Z)
+                        )
+                        maxVec = Vector3.new(
+                            math.max(maxVec.X, corner.X),
+                            math.max(maxVec.Y, corner.Y),
+                            math.max(maxVec.Z, corner.Z)
+                        )
+                    end
+                end
+            end
+        end
+
+        if minVec and maxVec then
+            cframe = CFrame.new((minVec + maxVec)/2)
+            size = maxVec - minVec
+            return cframe, size
+        end
+    end
+end
+
 function Library:Add(idx, info)
     if self.Unloaded then return end
     assert(info.Model and typeof(info.Model) == "Instance", "Alvo inválido!")
@@ -146,7 +200,8 @@ function Library:Add(idx, info)
         SuffixDistance = info.SuffixDistance or self.Template.Add.SuffixDistance,
         PrefixDistance = info.PrefixDistance or self.Template.Add.PrefixDistance,
         Center = if info.Center and info.Center:IsA("BasePart") then info.Center else nil,
-        Color = info.Color or self.Template.Add.Color
+        Color = info.Color or self.Template.Add.Color,
+        Method = info.Method or "Position"
     }
 
     ESP.Tracer = NewDrawing("Line", { 
@@ -315,7 +370,16 @@ RunConnect = RunService.RenderStepped:Connect(function()
             continue
         end
 
-        local targetPos = if ESP.Center then ESP.Center.Position else target:IsA("Model") and target.PrimaryPart and target.PrimaryPart.Position or target.Position
+        local targetPos
+        if ESP.Method == "BoundingBox" then
+            local cframe, _ = Library:GetBoundingBox(target)
+            targetPos = cframe and cframe.Position
+        else
+            targetPos = ESP.Center and ESP.Center.Position
+                or (target:IsA("Model") and target.PrimaryPart and target.PrimaryPart.Position)
+                or (target:IsA("BasePart") and target.Position)
+        end
+
         if not targetPos then
             if ESP.Tracer then ESP.Tracer.Visible = false end
             if ESP.TextDraw then ESP.TextDraw.Visible = false end
@@ -368,11 +432,10 @@ RunConnect = RunService.RenderStepped:Connect(function()
             elseif ESP.Tracer then
                 ESP.Tracer.Visible = false
             end
+
             if ESP.TextDraw then
                 local text = ""
-                if Library.Config.Name then
-                    text = ESP.Name
-                end
+                if Library.Config.Name then text = ESP.Name end
                 if Library.Config.Distance then
                     local distText = ESP.PrefixDistance .. (Library.Settings.Decimal and string.format("%.1f", dist) or math.floor(dist)) .. ESP.SuffixDistance
                     if text ~= "" then text = text.."\n"..distText else text = distText end
@@ -385,9 +448,7 @@ RunConnect = RunService.RenderStepped:Connect(function()
                 ESP.TextDraw.Visible = true
             end
 
-            if ESP.Arrow then
-                ESP.Arrow.Visible = false
-            end
+            if ESP.Arrow then ESP.Arrow.Visible = false end
         else
             if ESP.Tracer then ESP.Tracer.Visible = false end
             if ESP.TextDraw then ESP.TextDraw.Visible = false end
