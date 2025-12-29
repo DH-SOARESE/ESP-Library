@@ -21,7 +21,7 @@ CamConnect = Workspace:GetPropertyChangedSignal("CurrentCamera"):Connect(functio
     Camera = Workspace.CurrentCamera
 end)
 
-local GetHUI = gethui or function()
+local gethui = gethui or function()
     return CoreGui
 end
 
@@ -32,7 +32,7 @@ local assert = function(condition, errorMessage)
 end
 
 local ArrowMain = Instance.new("ScreenGui")
-ArrowMain.Parent = GetHUI()
+ArrowMain.Parent = gethui()
 ArrowMain.IgnoreGuiInset = true
 ArrowMain.DisplayOrder = 3
 
@@ -124,7 +124,7 @@ local function New(Class: string, properties: table?)
     return Instance_
 end
 
-local function NewDrawing(class, props)
+local function NewDrawing(class: string?, props: table?)
     local Draw = Drawing.new(class)
     if props then
         for k, v in pairs(props) do
@@ -194,13 +194,19 @@ function Library:Add(idx, info)
     if self.Unloaded then return end
     assert(info.Model and typeof(info.Model) == "Instance", "Alvo inválido!")
     assert(not ESPs[idx], "ESP Já existe nesse alvo!")
+    
     local ESP = {
         Model = info.Model,
         Name = info.Name or info.Model.Name,
+        
         SuffixDistance = info.SuffixDistance or self.Template.Add.SuffixDistance,
         PrefixDistance = info.PrefixDistance or self.Template.Add.PrefixDistance,
+        
         Center = if info.Center and info.Center:IsA("BasePart") then info.Center else nil,
+        Visible = info.Visible or true,
+        
         Color = info.Color or self.Template.Add.Color,
+        
         Method = info.Method or "Position"
     }
 
@@ -227,7 +233,7 @@ function Library:Add(idx, info)
         FillTransparency = self.Config.Filled and self.Settings.HighlightTransparency.Filled or 1,
         OutlineTransparency = self.Config.Outline and self.Settings.HighlightTransparency.Outline or 1,
         Enabled = false,
-        Parent = GetHUI()
+        Parent = gethui()
     })
     
     ESP.Arrow = New("ImageLabel", {
@@ -275,6 +281,11 @@ function Library:Add(idx, info)
     function ESP:SetPrefixDistance(New: string?)
         self.PrefixDistance = New
     end    
+    
+    function ESP:Visible(bool: boolean?)
+        ESP.Visible = bool
+    end
+    
     ESPs[(typeof(idx) == "string" and idx or ESP.Model)] = ESP
     return ESP
 end
@@ -328,6 +339,12 @@ function Library:SetSuffixDistance(idx, New: string?)
     end
 end
 
+function Library:SetVisible(idx, bool: boolean?)
+    if ESPs[idx] then
+        ESPs[idx]:Visible(bool)
+    end
+end
+
 function Library:GetESP(idx)
     if ESPs[idx] then
         return ESPs[idx]
@@ -341,12 +358,12 @@ function Library:HasESP(idx)
 end
 
 function Library:Clear()
-    for idx, ESP in pairs(ESPs) do
+    for idx, _ in pairs(ESPs) do
         self:Remove(idx)
     end
 end
 
-function Library:RainbowMode(state, delay)
+function Library:RainbowMode(state: boolean?, delay: number?)
     if typeof(state) == "boolean" then
         self.Settings.Rainbow = state
     end
@@ -391,7 +408,7 @@ RunConnect = RunService.RenderStepped:Connect(function()
         local pos3d = Camera:WorldToViewportPoint(targetPos)
         local dist = (targetPos - cameraPos).Magnitude
 
-        if dist > Library.Settings.MaxDistance or dist < Library.Settings.MinDistance then
+        if (dist > Library.Settings.MaxDistance or dist < Library.Settings.MinDistance) or not ESP.Visible then
             if ESP.Tracer then ESP.Tracer.Visible = false end
             if ESP.TextDraw then ESP.TextDraw.Visible = false end
             if ESP.Highlight then ESP.Highlight.Enabled = false end
