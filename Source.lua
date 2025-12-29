@@ -112,7 +112,7 @@ local Origin = {
     Right = function(vs) return Vector2.new(vs.X, vs.Y / 2) end,
 }
 
-local function New(Class: string, properties: table?)
+local function New(Class: string?, properties: table?)
     local Instance_ = Instance.new(Class)
     if properties then
         for k, v in pairs(properties) do
@@ -190,7 +190,7 @@ function Library:GetBoundingBox(root: Instance?)
     end
 end
 
-function Library:Add(idx, info)
+function Library:Add(idx, info: table?)
     if self.Unloaded then return end
     assert(info.Model and typeof(info.Model) == "Instance", "Alvo inválido!")
     assert(not ESPs[idx], "ESP Já existe nesse alvo!")
@@ -258,16 +258,8 @@ function Library:Add(idx, info)
         end
     end    
     
-    function ESP:SetColor(color: Color3)
+    function ESP:SetColor(color: Color3?)
         self.Color = color
-        if self.Tracer then self.Tracer.Color = color end
-        if self.TextDraw then self.TextDraw.Color = color end
-        if self.Box then self.Box.Color = color end
-        if self.Highlight then
-            self.Highlight.FillColor = color
-            self.Highlight.OutlineColor = color
-        end
-        if self.Arrow then self.Arrow.ImageColor3 = color end
     end
 
     function ESP:SetName(New: string?)
@@ -291,7 +283,13 @@ function Library:Add(idx, info)
 end
 
 function Library:SetTemplate(idx, info: table?)
-    self.Template[idx] = info
+    if self.Template[idx] then
+        for k, v in pairs(info) do
+            if self.Template[idx][k] then
+                self.Template[idx][k] = v
+            end
+        end
+    end
 end
 
 function Library:Update(idx, info: table?)
@@ -299,8 +297,10 @@ function Library:Update(idx, info: table?)
     assert(ESPs[idx], "Erro: valor esperado não existe")
     assert(typeof(info) == "table", "Erro: 'info' precisa ser uma table")
     
-    for key, value in pairs(info) do
-        ESPs[idx][key] = value
+    for k, v in pairs(info) do
+        if ESPs[idx][k] then
+            ESPs[idx][k] = v
+        end
     end
 end
 
