@@ -55,8 +55,9 @@ Library:Add(workspace.NPC, {
 - `Color` (opcional): Cor do ESP (padrão: valor do Template)
 - `PrefixDistance` (opcional): Prefixo da distância (ex: "[")
 - `SuffixDistance` (opcional): Sufixo da distância (ex: "m]")
-- `Center` (opcional): BasePart usado como ponto central do alvo.
 - `Collision` (opcional): Adiciona Humanoid e ajusta transparência para colisão
+- `Center` (opcional): BasePart customizada como centro de rastreamento
+- `Method` (opcional): Método de cálculo de posição ("Position" ou "BoundingBox")
 
 ### Remover ESP
 
@@ -112,6 +113,13 @@ end
 ```luau
 -- Remove todos os ESPs ativos
 Library:Clear()
+```
+
+### Destruir a Library
+
+```luau
+-- Remove todos os ESPs e desconecta eventos (cleanup completo)
+Library:Destroy()
 ```
 
 ---
@@ -175,13 +183,6 @@ Library:RainbowMode(false)
 Library:RainbowMode(false, 8)
 ```
 
-# Unload
-
-Para descarregar a library e liberar recursos:
-
-```lua
-Library:Destroy()
-```
 ---
 
 ## ⚙️ Configurações Globais
@@ -314,6 +315,8 @@ Ao adicionar um ESP, você recebe um objeto com as seguintes propriedades e comp
     Color = Color3,               -- Cor do ESP
     PrefixDistance = "string",    -- Prefixo da distância
     SuffixDistance = "string",    -- Sufixo da distância
+    Center = BasePart or nil,     -- Centro customizado de rastreamento
+    Method = "string",            -- Método de cálculo ("Position" ou "BoundingBox")
     
     -- Componentes de renderização (não modificar diretamente)
     Tracer = Drawing,             -- Linha tracer
@@ -332,6 +335,28 @@ Ao adicionar um ESP, você recebe um objeto com as seguintes propriedades e comp
 ---
 
 ## 🎯 Sistema de Renderização
+
+### Métodos de Cálculo de Posição
+
+A biblioteca oferece dois métodos para calcular a posição do alvo:
+
+**1. Position (Padrão):**
+- Usa `PrimaryPart.Position` para Models
+- Usa `BasePart.Position` para partes individuais
+- Usa `Center.Position` se especificado
+
+**2. BoundingBox:**
+- Calcula o centro da caixa delimitadora do modelo inteiro
+- Considera todos os BaseParts descendentes
+- Ideal para modelos irregulares ou sem PrimaryPart definida
+
+```luau
+-- Usando BoundingBox
+Library:Add("Enemy", {
+    Model = workspace.Enemy,
+    Method = "BoundingBox"
+})
+```
 
 ### Lógica de Visibilidade
 
@@ -370,6 +395,16 @@ Library:Add("Enemy", {
 })
 ```
 
+### Centro Customizado de Rastreamento
+
+```luau
+-- Define uma parte específica como centro do ESP
+Library:Add("Boss", {
+    Model = workspace.Boss,
+    Center = workspace.Boss.Head  -- ESP aponta para a cabeça
+})
+```
+
 ### Acesso Direto aos ESPs
 
 ```luau
@@ -394,9 +429,12 @@ A biblioteca usa funções seguras para compatibilidade:
 2. **Performance:** Limite `MaxDistance` para evitar renderizar alvos muito distantes
 3. **Rainbow Mode:** Desative quando não necessário para economizar processamento
 4. **Limpeza:** Sempre remova ESPs não utilizados com `:Remove()` ou `:Clear()`
-5. **Cores Contrastantes:** Use cores que se destacam no ambiente do jogo
-6. **Font Size:** Ajuste conforme resolução da tela (menor para 1080p+, maior para 720p)
-7. **Arrow Range:** Ajuste o Range da seta para deixar mais próximo/distante do centro
+5. **Cleanup Completo:** Use `:Destroy()` ao descarregar completamente a library
+6. **Cores Contrastantes:** Use cores que se destacam no ambiente do jogo
+7. **Font Size:** Ajuste conforme resolução da tela (menor para 1080p+, maior para 720p)
+8. **Arrow Range:** Ajuste o Range da seta para deixar mais próximo/distante do centro
+9. **BoundingBox:** Use para modelos irregulares ou quando o PrimaryPart não está centralizado
+10. **Center Parameter:** Útil para focar em partes específicas (cabeça, torso, etc.)
 
 ---
 
@@ -407,6 +445,9 @@ A biblioteca usa funções seguras para compatibilidade:
 - O sistema de Arrow calcula automaticamente a direção mesmo quando o alvo está atrás da câmera
 - Highlight requer que o Model tenha um PrimaryPart ou seja um BasePart
 - A transparência 0.99 no modo Collision evita invisibilidade total mantendo colisão
+- O método `:Destroy()` realiza limpeza completa, desconectando eventos e removendo GUIs
+- BoundingBox pode ter custo de performance maior em models com muitas partes
+- A biblioteca verifica automaticamente mudanças na câmera do Workspace
 
 ---
 
@@ -414,16 +455,27 @@ A biblioteca usa funções seguras para compatibilidade:
 
 **Versão Atual:** 1.0.1
 
+**Changelog:**
+- ✨ Adicionado método `:Destroy()` para cleanup completo
+- ✨ Adicionado suporte ao método "BoundingBox" para cálculo de posição
+- ✨ Adicionado parâmetro `Center` para centro customizado de rastreamento
+- ✨ Adicionado parâmetro `Method` para escolher método de cálculo
+- 🐛 Corrigido comportamento de Arrow quando alvo está atrás da câmera
+- ⚡ Otimizado sistema de renderização com detecção de parent nulo
+- 🔧 Melhorado sistema de detecção de câmera com PropertyChangedSignal
+
 ---
 
 ## 🔗 Links
 
 - **Repositório:** [GitHub](https://github.com/DH-SOARESE/ESP-Library)
 - **Source:** [Source.lua](https://github.com/DH-SOARESE/ESP-Library/blob/main/Source.lua)
-- **Example** [Example.lua](https://github.com/DH-SOARESE/ESP-Library/blob/main/Example.lua)
+- **Example:** [Example.lua](https://github.com/DH-SOARESE/ESP-Library/blob/main/Example.lua)
+
 ```luau
 loadstring(game:HttpGet("https://raw.githubusercontent.com/DH-SOARESE/ESP-Library/main/Example.lua"))()
 ```
+
 ---
 
-**Nota:** Para exemplos práticos de implementação e casos de uso específicos, consulte o arquivo `examples.lua` no repositório.
+**Nota:** Para exemplos práticos de implementação e casos de uso específicos, consulte o arquivo `Example.lua` no repositório.
