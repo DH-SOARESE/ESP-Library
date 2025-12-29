@@ -1,4 +1,4 @@
-# ESP Library para Roblox (1.0.1)
+# ESP Library para Roblox (1.0.2)
 
 Uma biblioteca completa e otimizada para criar sistemas de ESP (Extra Sensory Perception) em Roblox, oferecendo visualização avançada de objetos e jogadores com múltiplas opções de customização e renderização em tempo real.
 
@@ -15,6 +15,7 @@ A biblioteca oferece os seguintes recursos visuais:
 - **Filled:** Preenchimento sólido do modelo com cor personalizada
 - **Arrow:** Seta indicadora direcional quando o alvo está fora da tela
 - **Rainbow Mode:** Efeito de cor arco-íris automático e suave
+- **Visibility Control:** Controle individual de visibilidade por ESP
 
 ---
 
@@ -37,7 +38,8 @@ local Alvo = Library:Add("Player1", {
     Model = game.Players.LocalPlayer.Character,
     Color = Color3.fromRGB(255, 0, 0),
     PrefixDistance = "[",
-    SuffixDistance = "m]"
+    SuffixDistance = "m]",
+    Visible = true  -- Controle de visibilidade individual
 })
 
 -- Sem identificador (usa o Model como chave)
@@ -58,6 +60,7 @@ Library:Add(workspace.NPC, {
 - `Collision` (opcional): Adiciona Humanoid e ajusta transparência para colisão
 - `Center` (opcional): BasePart customizada como centro de rastreamento
 - `Method` (opcional): Método de cálculo de posição ("Position" ou "BoundingBox")
+- `Visible` (opcional): Controle de visibilidade individual (padrão: true)
 
 ### Remover ESP
 
@@ -75,7 +78,8 @@ Library:Remove(workspace.NPC)
 Library:Update("Player1", {
     Model = workspace.NovoModelo,
     Name = "Nome Atualizado",
-    Color = Color3.fromRGB(0, 255, 0)
+    Color = Color3.fromRGB(0, 255, 0),
+    Visible = false  -- Oculta temporariamente
 })
 ```
 
@@ -106,6 +110,21 @@ end
 if Library:HasESP(workspace.NPC) then
     print("ESP existe no modelo!")
 end
+```
+
+### Controlar Visibilidade
+
+```luau
+-- Ocultar ESP específico
+Library:SetVisible("Player1", false)
+
+-- Mostrar ESP específico
+Library:SetVisible("Player1", true)
+
+-- Usando método do objeto ESP
+local ESP = Library:GetESP("Player1")
+ESP:Visible(false)  -- Oculta
+ESP:Visible(true)   -- Mostra
 ```
 
 ### Limpar Todos os ESPs
@@ -144,6 +163,10 @@ Alvo:SetPrefixDistance("Dist: ")
 
 -- Alterar sufixo da distância
 Alvo:SetSuffixDistance(" studs")
+
+-- Controlar visibilidade
+Alvo:Visible(false)  -- Oculta
+Alvo:Visible(true)   -- Mostra
 ```
 
 ### Métodos Globais da Library
@@ -160,6 +183,9 @@ Library:SetPrefixDistance("Player1", ">>")
 
 -- Alterar sufixo
 Library:SetSuffixDistance("Player1", "<<")
+
+-- Controlar visibilidade
+Library:SetVisible("Player1", false)
 ```
 
 ---
@@ -317,6 +343,7 @@ Ao adicionar um ESP, você recebe um objeto com as seguintes propriedades e comp
     SuffixDistance = "string",    -- Sufixo da distância
     Center = BasePart or nil,     -- Centro customizado de rastreamento
     Method = "string",            -- Método de cálculo ("Position" ou "BoundingBox")
+    Visible = boolean,            -- Controle de visibilidade individual
     
     -- Componentes de renderização (não modificar diretamente)
     Tracer = Drawing,             -- Linha tracer
@@ -328,7 +355,8 @@ Ao adicionar um ESP, você recebe um objeto com as seguintes propriedades e comp
     SetColor = function,
     SetName = function,
     SetPrefixDistance = function,
-    SetSuffixDistance = function
+    SetSuffixDistance = function,
+    Visible = function            -- Controle de visibilidade
 }
 ```
 
@@ -360,26 +388,30 @@ Library:Add("Enemy", {
 
 ### Lógica de Visibilidade
 
-A biblioteca usa um sistema inteligente de renderização:
+A biblioteca usa um sistema inteligente de renderização com múltiplas camadas de controle:
 
 1. **Verificação de Distância:** ESP só renderiza entre `MinDistance` e `MaxDistance`
-2. **Detecção de Tela:** Verifica se o alvo está dentro da viewport da câmera
-3. **Campo de Visão (FOV):** Calcula se o alvo está dentro do raio configurado
-4. **Arrow Automático:** Quando fora da tela/FOV, exibe seta direcional
+2. **Controle Individual:** Cada ESP possui propriedade `Visible` para controle individual
+3. **Detecção de Tela:** Verifica se o alvo está dentro da viewport da câmera
+4. **Campo de Visão (FOV):** Calcula se o alvo está dentro do raio configurado
+5. **Arrow Automático:** Quando fora da tela/FOV, exibe seta direcional
 
 ### Componentes Visíveis por Situação
 
-**Alvo dentro da tela e FOV:**
+**Alvo dentro da tela e FOV (e Visible = true):**
 - ✅ Highlight (Outline + Filled)
 - ✅ Tracer
 - ✅ Text (Name + Distance)
 - ❌ Arrow (oculto)
 
-**Alvo fora da tela ou FOV:**
+**Alvo fora da tela ou FOV (e Visible = true):**
 - ❌ Highlight (oculto)
 - ❌ Tracer (oculto)
 - ❌ Text (oculto)
 - ✅ Arrow (visível e aponta para o alvo)
+
+**Visible = false:**
+- ❌ Todos os componentes ocultos independente da posição
 
 ---
 
@@ -405,12 +437,35 @@ Library:Add("Boss", {
 })
 ```
 
+### Controle Individual de Visibilidade
+
+```luau
+-- Ocultar temporariamente um ESP sem removê-lo
+local enemyESP = Library:Add("Enemy1", {
+    Model = workspace.Enemy,
+    Visible = true
+})
+
+-- Ocultar quando necessário
+enemyESP:Visible(false)
+
+-- Mostrar novamente
+enemyESP:Visible(true)
+
+-- Útil para sistemas de radar, filtros, etc
+```
+
 ### Acesso Direto aos ESPs
 
 ```luau
 -- Acessar tabela de todos os ESPs ativos
 for identifier, ESP in pairs(Library.ESPs) do
-    print(identifier, ESP.Name, ESP.Color)
+    print(identifier, ESP.Name, ESP.Color, ESP.Visible)
+end
+
+-- Exemplo: Ocultar todos os ESPs temporariamente
+for _, ESP in pairs(Library.ESPs) do
+    ESP:Visible(false)
 end
 ```
 
@@ -435,6 +490,52 @@ A biblioteca usa funções seguras para compatibilidade:
 8. **Arrow Range:** Ajuste o Range da seta para deixar mais próximo/distante do centro
 9. **BoundingBox:** Use para modelos irregulares ou quando o PrimaryPart não está centralizado
 10. **Center Parameter:** Útil para focar em partes específicas (cabeça, torso, etc.)
+11. **Visible Property:** Use `:Visible()` para ocultar temporariamente sem perder configurações
+12. **Filtros Dinâmicos:** Combine `Visible` com lógica customizada para sistemas de filtro
+
+---
+
+## 🎮 Exemplos Práticos
+
+### Sistema de Filtro por Time
+
+```luau
+-- Adicionar ESPs com cores por time
+for _, player in pairs(Players:GetPlayers()) do
+    if player.Team.Name == "Red" then
+        Library:Add(player.Name, {
+            Model = player.Character,
+            Color = Color3.fromRGB(255, 0, 0),
+            Visible = true
+        })
+    end
+end
+
+-- Alternar visibilidade por time
+local showRedTeam = true
+for _, ESP in pairs(Library.ESPs) do
+    if ESP.Color == Color3.fromRGB(255, 0, 0) then
+        ESP:Visible(showRedTeam)
+    end
+end
+```
+
+### ESP com Distância Dinâmica
+
+```luau
+-- Criar ESP que só aparece quando perto
+local boss = Library:Add("Boss", {
+    Model = workspace.Boss,
+    Color = Color3.fromRGB(255, 0, 0),
+    Method = "BoundingBox"
+})
+
+-- Atualizar visibilidade baseado em distância customizada
+RunService.Heartbeat:Connect(function()
+    local dist = (workspace.Boss.PrimaryPart.Position - LocalPlayer.Character.HumanoidRootPart.Position).Magnitude
+    boss:Visible(dist < 100)  -- Só mostra se estiver a menos de 100 studs
+end)
+```
 
 ---
 
@@ -448,14 +549,26 @@ A biblioteca usa funções seguras para compatibilidade:
 - O método `:Destroy()` realiza limpeza completa, desconectando eventos e removendo GUIs
 - BoundingBox pode ter custo de performance maior em models com muitas partes
 - A biblioteca verifica automaticamente mudanças na câmera do Workspace
+- A propriedade `Visible` é verificada antes das verificações de distância para melhor performance
+- ESPs ocultos via `Visible = false` não consomem recursos de renderização
 
 ---
 
 ## 📌 Versão
 
-**Versão Atual:** 1.0.1
+**Versão Atual:** 1.0.2
 
 **Changelog:**
+
+**v1.0.2:**
+- ✨ Adicionado controle individual de visibilidade (`Visible` property)
+- ✨ Adicionado método `:Visible()` para objetos ESP
+- ✨ Adicionado método global `:SetVisible()` 
+- ⚡ Otimizado sistema de renderização com verificação de visibilidade
+- 🔧 Corrigido `GetHUI` (era `GetHUI`, agora é `gethui`)
+- 🐛 Melhorado tratamento de ESPs ocultos para economizar performance
+
+**v1.0.1:**
 - ✨ Adicionado método `:Destroy()` para cleanup completo
 - ✨ Adicionado suporte ao método "BoundingBox" para cálculo de posição
 - ✨ Adicionado parâmetro `Center` para centro customizado de rastreamento
