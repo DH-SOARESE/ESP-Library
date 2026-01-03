@@ -282,6 +282,66 @@ function Library:Add(idx, info: table?)
     return ESP
 end
 
+function Library:Search(info)
+    assert(info ~= nil, "Info precisa ser definido")
+    assert(info.Local ~= nil, "Local precisa ser definido")
+    
+    local targets = info.Target or info.Targets
+    
+    local targetConfigs = {}
+    
+    if typeof(targets) == "string" then
+        targetConfigs[targets] = {
+            Name = info.Name,
+            Color = info.Color,
+            PrefixDistance = info.PrefixDistance,
+            SuffixDistance = info.SuffixDistance
+        }
+    elseif typeof(targets) == "table" then
+        -- Se for array de strings → usa config global
+        if targets[1] and typeof(targets[1]) == "string" then
+            for _, name in ipairs(targets) do
+                targetConfigs[name] = {
+                    Name = info.Name or name,
+                    Color = info.Color,
+                    PrefixDistance = info.PrefixDistance,
+                    SuffixDistance = info.SuffixDistance
+                }
+            end
+        else
+            -- Se for table com configs por nome → usa direto
+            for targetName, config in pairs(targets) do
+                targetConfigs[targetName] = {
+                    Name = config.Name or info.Name or targetName,
+                    Color = config.Color or info.Color,
+                    PrefixDistance = config.PrefixDistance or info.PrefixDistance,
+                    SuffixDistance = config.SuffixDistance or info.SuffixDistance,
+                    -- Pode adicionar mais overrides aqui no futuro
+                }
+            end
+        end
+    else
+        error("Target/Targets precisa ser string ou table")
+    end
+    
+    -- Iteração nos objetos
+    local objects = typeof(info.Local) == "table" and info.Local or info.Local:GetDescendants()
+    
+    for _, obj in ipairs(objects) do
+        if obj:IsA("Model") or obj:IsA("BasePart") then
+            local objName = obj.Name
+            
+            if targetConfigs[objName] then
+                local config = table.clone(targetConfigs[objName])
+                config.Model = obj
+                
+                local id = "search_" .. objName .. "_" .. obj:GetFullName()
+                Library:Add(id, config)
+            end
+        end
+    end
+end
+
 function Library:SetTemplate(idx, info: table?)
     if self.Template[idx] then
         for k, v in pairs(info) do
