@@ -1,4 +1,4 @@
-# ESP Library para Roblox (1.0.2)
+# ESP Library para Roblox (1.0.3)
 
 Uma biblioteca completa e otimizada para criar sistemas de ESP (Extra Sensory Perception) em Roblox, oferecendo visualização avançada de objetos e jogadores com múltiplas opções de customização e renderização em tempo real.
 
@@ -16,6 +16,7 @@ A biblioteca oferece os seguintes recursos visuais:
 - **Arrow:** Seta indicadora direcional quando o alvo está fora da tela
 - **Rainbow Mode:** Efeito de cor arco-íris automático e suave
 - **Visibility Control:** Controle individual de visibilidade por ESP
+- **Search System:** Sistema de busca automática para múltiplos alvos
 
 ---
 
@@ -62,6 +63,59 @@ Library:Add(workspace.NPC, {
 - `Method` (opcional): Método de cálculo de posição ("Position" ou "BoundingBox")
 - `Visible` (opcional): Controle de visibilidade individual (padrão: true)
 
+### Sistema de Busca Automática (Search)
+
+O método `:Search()` permite adicionar ESPs automaticamente para múltiplos objetos baseados em seus nomes:
+
+```luau
+-- Busca simples com configuração global
+Library:Search({
+    Local = workspace.Enemies,  -- Onde buscar (Instance ou table)
+    Target = "Zombie",          -- Nome do alvo (string)
+    Color = Color3.fromRGB(255, 0, 0),
+    Name = "Inimigo"
+})
+
+-- Busca múltiplos alvos com mesma configuração
+Library:Search({
+    Local = workspace,
+    Targets = {"Zombie", "Skeleton", "Ghost"},  -- Array de nomes
+    Color = Color3.fromRGB(255, 0, 0),
+    PrefixDistance = ">>",
+    SuffixDistance = "<<"
+})
+
+-- Configuração individual por alvo
+Library:Search({
+    Local = workspace.NPCs:GetDescendants(),  -- Pode ser table
+    Targets = {
+        ["Boss"] = {
+            Name = "CHEFE",
+            Color = Color3.fromRGB(255, 0, 0)
+        },
+        ["Merchant"] = {
+            Name = "Vendedor",
+            Color = Color3.fromRGB(0, 255, 0)
+        },
+        ["Guard"] = {
+            Color = Color3.fromRGB(255, 255, 0)
+            -- Name será "Guard" por padrão
+        }
+    }
+})
+```
+
+**Parâmetros do Search:**
+- `Local` (obrigatório): Instance (busca com GetDescendants) ou table de objetos
+- `Target` ou `Targets` (obrigatório): 
+  - String: Nome único do alvo
+  - Array: Lista de nomes com configuração global
+  - Table: Configurações individuais por nome
+- `Name` (opcional): Nome global ou padrão
+- `Color` (opcional): Cor global ou padrão
+- `PrefixDistance` (opcional): Prefixo global ou padrão
+- `SuffixDistance` (opcional): Sufixo global ou padrão
+
 ### Remover ESP
 
 ```luau
@@ -70,6 +124,9 @@ Library:Remove("Player1")
 
 -- Por objeto/modelo
 Library:Remove(workspace.NPC)
+
+-- Remover ESPs criados por Search
+Library:Remove("search_Zombie_Workspace.Enemies.Zombie")
 ```
 
 ### Atualizar ESP
@@ -390,11 +447,12 @@ Library:Add("Enemy", {
 
 A biblioteca usa um sistema inteligente de renderização com múltiplas camadas de controle:
 
-1. **Verificação de Distância:** ESP só renderiza entre `MinDistance` e `MaxDistance`
-2. **Controle Individual:** Cada ESP possui propriedade `Visible` para controle individual
-3. **Detecção de Tela:** Verifica se o alvo está dentro da viewport da câmera
-4. **Campo de Visão (FOV):** Calcula se o alvo está dentro do raio configurado
-5. **Arrow Automático:** Quando fora da tela/FOV, exibe seta direcional
+1. **Verificação de Parent:** ESP não renderiza se Model foi destruído ou removido
+2. **Verificação de Distância:** ESP só renderiza entre `MinDistance` e `MaxDistance`
+3. **Controle Individual:** Cada ESP possui propriedade `Visible` para controle individual
+4. **Detecção de Tela:** Verifica se o alvo está dentro da viewport da câmera
+5. **Campo de Visão (FOV):** Calcula se o alvo está dentro do raio configurado
+6. **Arrow Automático:** Quando fora da tela/FOV, exibe seta direcional
 
 ### Componentes Visíveis por Situação
 
@@ -416,6 +474,42 @@ A biblioteca usa um sistema inteligente de renderização com múltiplas camadas
 ---
 
 ## 🔧 Recursos Avançados
+
+### Sistema de Busca (Search)
+
+O método `:Search()` permite adicionar ESPs em massa para múltiplos objetos:
+
+```luau
+-- Exemplo 1: Busca simples em workspace
+Library:Search({
+    Local = workspace.Enemies,
+    Target = "Zombie",
+    Color = Color3.fromRGB(255, 0, 0)
+})
+
+-- Exemplo 2: Múltiplos alvos com configuração global
+Library:Search({
+    Local = workspace,
+    Targets = {"Boss", "Minion", "Elite"},
+    Color = Color3.fromRGB(255, 255, 0),
+    Name = "Inimigo"
+})
+
+-- Exemplo 3: Configurações individuais por tipo
+Library:Search({
+    Local = game:GetDescendants(),  -- Busca global
+    Targets = {
+        ["Treasure"] = {
+            Name = "💎 Tesouro",
+            Color = Color3.fromRGB(255, 215, 0)
+        },
+        ["Health"] = {
+            Name = "❤️ Vida",
+            Color = Color3.fromRGB(0, 255, 0)
+        }
+    }
+})
+```
 
 ### Suporte a Collision
 
@@ -492,10 +586,44 @@ A biblioteca usa funções seguras para compatibilidade:
 10. **Center Parameter:** Útil para focar em partes específicas (cabeça, torso, etc.)
 11. **Visible Property:** Use `:Visible()` para ocultar temporariamente sem perder configurações
 12. **Filtros Dinâmicos:** Combine `Visible` com lógica customizada para sistemas de filtro
+13. **Search System:** Use `:Search()` para adicionar múltiplos ESPs automaticamente
+14. **Table como Local:** Passe arrays de objetos diretamente para `:Search()` para otimizar
 
 ---
 
 ## 🎮 Exemplos Práticos
+
+### Sistema de Busca Automática de Inimigos
+
+```luau
+-- Buscar todos os inimigos no workspace
+Library:Search({
+    Local = workspace.Enemies,
+    Targets = {"Zombie", "Skeleton", "Ghost"},
+    Color = Color3.fromRGB(255, 0, 0),
+    PrefixDistance = "[",
+    SuffixDistance = "m]"
+})
+
+-- Buscar com configurações diferentes por tipo
+Library:Search({
+    Local = workspace,
+    Targets = {
+        ["Boss"] = {
+            Name = "👑 CHEFE",
+            Color = Color3.fromRGB(255, 0, 0)
+        },
+        ["Elite"] = {
+            Name = "⚔️ Elite",
+            Color = Color3.fromRGB(255, 165, 0)
+        },
+        ["Common"] = {
+            Name = "Comum",
+            Color = Color3.fromRGB(200, 200, 200)
+        }
+    }
+})
+```
 
 ### Sistema de Filtro por Time
 
@@ -537,6 +665,29 @@ RunService.Heartbeat:Connect(function()
 end)
 ```
 
+### Busca de Itens Colecionáveis
+
+```luau
+-- Buscar todos os itens colecionáveis
+Library:Search({
+    Local = workspace.Items:GetDescendants(),  -- Usar GetDescendants para busca profunda
+    Targets = {
+        ["Coin"] = {
+            Name = "💰 Moeda",
+            Color = Color3.fromRGB(255, 215, 0)
+        },
+        ["Gem"] = {
+            Name = "💎 Gema",
+            Color = Color3.fromRGB(0, 255, 255)
+        },
+        ["Chest"] = {
+            Name = "📦 Baú",
+            Color = Color3.fromRGB(139, 69, 19)
+        }
+    }
+})
+```
+
 ---
 
 ## ⚠️ Observações Importantes
@@ -551,14 +702,24 @@ end)
 - A biblioteca verifica automaticamente mudanças na câmera do Workspace
 - A propriedade `Visible` é verificada antes das verificações de distância para melhor performance
 - ESPs ocultos via `Visible = false` não consomem recursos de renderização
+- `:Search()` cria identificadores únicos automaticamente no formato "search_[Nome]_[FullName]"
+- `:Search()` aceita tanto Instance (usa GetDescendants) quanto tables de objetos
 
 ---
 
 ## 📌 Versão
 
-**Versão Atual:** 1.0.2
+**Versão Atual:** 1.0.3
 
 **Changelog:**
+
+**v1.0.3:**
+- ✨ Adicionado método `:Search()` para busca automática de múltiplos alvos
+- ✨ Suporte a configurações globais e individuais no `:Search()`
+- ✨ `:Search()` aceita Instance (GetDescendants) ou table de objetos
+- ✨ Sistema de identificadores automáticos para ESPs criados via `:Search()`
+- 📝 Documentação expandida com exemplos do sistema de busca
+- ⚡ Otimizado verificação de parent nulo antes de cálculos
 
 **v1.0.2:**
 - ✨ Adicionado controle individual de visibilidade (`Visible` property)
