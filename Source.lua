@@ -6,6 +6,7 @@ local Players = cloneref(game:GetService("Players"))
 local RunService = cloneref(game:GetService("RunService"))
 local CoreGui = cloneref(game:GetService("CoreGui"))
 local Workspace = cloneref(game:GetService("Workspace"))
+local UserInputService = cloneref(game:GetService("InputService"))
 
 local getgenv = getgenv or (function() 
     return shared 
@@ -87,6 +88,15 @@ local Library = {
     ESPs = ESPs
 }
 
+local Origin = {
+    Top = function(vs) return Vector2.new(vs.X / 2, 0) end,
+    Center = function(vs) return Vector2.new(vs.X / 2, vs.Y / 2) end,
+    Bottom = function(vs) return Vector2.new(vs.X / 2, vs.Y) end,
+    Left = function(vs) return Vector2.new(0, vs.Y / 2) end,
+    Right = function(vs) return Vector2.new(vs.X, vs.Y / 2) end,
+    Mouse = function() return UserInputService:GetMouseLocation() end
+}
+
 function Library:Destroy()
     Library:Clear()
     if CamConnect then
@@ -103,15 +113,6 @@ function Library:Destroy()
     end
     self = { Unloaded = true }
 end
-
-local Origin = {
-    Top = function(vs) return Vector2.new(vs.X / 2, 0) end,
-    Center = function(vs) return Vector2.new(vs.X / 2, vs.Y / 2) end,
-    Bottom = function(vs) return Vector2.new(vs.X / 2, vs.Y) end,
-    Left = function(vs) return Vector2.new(0, vs.Y / 2) end,
-    Right = function(vs) return Vector2.new(vs.X, vs.Y / 2) end,
-    Mouse = function() return UserInputService:GetMouseLocation() end
-}
 
 local function New(Class: string?, properties: table?)
     local Instance_ = Instance.new(Class)
