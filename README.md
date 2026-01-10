@@ -309,7 +309,7 @@ end
 
 ## 📌 Versão
 
-**Versão:** 1.0.3
+**Versão:** 1.0.4
 
 **Atualizações:**
 - ✨ Sistema `:Search()` para busca automática
