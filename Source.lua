@@ -6,7 +6,7 @@ local Players = cloneref(game:GetService("Players"))
 local RunService = cloneref(game:GetService("RunService"))
 local CoreGui = cloneref(game:GetService("CoreGui"))
 local Workspace = cloneref(game:GetService("Workspace"))
-local UserInputService = cloneref(game:GetService("InputService"))
+local UserInputService = cloneref(game:GetService("UserInputService"))
 
 local getgenv = getgenv or (function() 
     return shared 
