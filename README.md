@@ -1,6 +1,6 @@
-# ESP Library para Roblox (1.0.4)
+# ESP Library para Roblox (1.0.5)
 
-Uma biblioteca otimizada para criar sistemas de ESP (Extra Sensory Perception) em Roblox com visualização avançada de objetos e jogadores.
+Uma biblioteca otimizada e leve para criar sistemas de ESP (Extra Sensory Perception) em Roblox com visualização avançada de objetos e jogadores.
 
 ---
 
@@ -16,7 +16,7 @@ Uma biblioteca otimizada para criar sistemas de ESP (Extra Sensory Perception) e
 - **Search System** - Busca automática de múltiplos alvos
 - **Multi-Color** - Cores individuais por componente
 - **Visibility Control** - Controle de visibilidade individual
-- **TypeLabel** - Escolha entre Drawing ou TextLabel para renderização de texto
+- **Lightweight** - Otimizado para melhor performance
 
 ---
 
@@ -43,6 +43,7 @@ Library:Add("Player1", {
 -- Com cores individuais
 Library:Add("Boss", {
     Model = workspace.Boss,
+    Name = "CHEFE",
     Color = {
         TracerColor = Color3.fromRGB(255, 0, 0),
         TextColor = Color3.fromRGB(255, 255, 255),
@@ -50,14 +51,6 @@ Library:Add("Boss", {
         OutlineColor = Color3.fromRGB(255, 255, 0),
         ImageColor = Color3.fromRGB(255, 0, 0)
     }
-})
-
--- Com TextLabel (BillboardGui)
-Library:Add("NPC", {
-    Model = workspace.NPC,
-    Name = "Vendedor",
-    TypeLabel = "TextLabel",  -- Usa TextLabel ao invés de Drawing
-    Color = Color3.fromRGB(0, 255, 0)
 })
 ```
 
@@ -70,19 +63,18 @@ Library:Add("NPC", {
 - `Center` - BasePart como centro
 - `Method` - "Position" ou "BoundingBox"
 - `Collision` - Renderização para modelos invisíveis
-- `TypeLabel` - "Drawing" (padrão) ou "TextLabel"
 
 ### Sistema de Busca
 
 ```luau
--- Busca simples
+-- Busca simples (um alvo)
 Library:Search({
     Local = workspace.Enemies,
     Target = "Zombie",
     Color = Color3.fromRGB(255, 0, 0)
 })
 
--- Múltiplos alvos
+-- Múltiplos alvos (array)
 Library:Search({
     Local = workspace,
     Targets = {"Zombie", "Skeleton", "Ghost"},
@@ -90,7 +82,7 @@ Library:Search({
     Color = Color3.fromRGB(255, 0, 0)
 })
 
--- Configuração individual
+-- Configuração individual por alvo
 Library:Search({
     Local = workspace,
     Targets = {
@@ -100,8 +92,7 @@ Library:Search({
         },
         ["Merchant"] = {
             Name = "Vendedor",
-            Color = Color3.fromRGB(0, 255, 0),
-            TypeLabel = "TextLabel"
+            Color = Color3.fromRGB(0, 255, 0)
         }
     }
 })
@@ -132,6 +123,7 @@ esp:SetName("Novo Nome")
 esp:SetVisible(false)
 esp:SetPrefixDistance("[")
 esp:SetSuffixDistance("]")
+esp:Destroy()
 ```
 
 ---
@@ -143,7 +135,7 @@ esp:SetSuffixDistance("]")
 ```luau
 Library.Enabled = true
 
-Library.Config.Tracer = true
+Library.Config.Tracer = false
 Library.Config.Name = true
 Library.Config.Distance = true
 Library.Config.Outline = true
@@ -156,10 +148,9 @@ Library.Config.Arrow = true
 ```luau
 Library.Settings.MaxDistance = math.huge
 Library.Settings.MinDistance = 5
-Library.Settings.Decimal = false
-Library.Settings.FontSize = 20
-Library.Settings.FontDraw = 2  -- 0=UI, 1=System, 2=Plex, 3=Monospace
-Library.Settings.FontTextLabel = Enum.Font.Code
+Library.Settings.Decimal = false  -- true = "123.4 m" | false = "123 m"
+Library.Settings.FontSize = 10
+Library.Settings.Font = 2  -- 0=UI, 1=System, 2=Plex, 3=Monospace
 ```
 
 ### Tracer
@@ -173,6 +164,8 @@ Library.Settings.TracerOrigin = "Bottom"
 
 ```luau
 Library:RainbowMode(true, 8)  -- (ativo, velocidade)
+
+-- Ou configure manualmente
 Library.Settings.Rainbow = false
 Library.Settings.RainbowDelay = 8
 ```
@@ -181,11 +174,11 @@ Library.Settings.RainbowDelay = 8
 
 ```luau
 Library.Settings.Arrow = {
-    Image = 92023845052369,
-    Size = UDim2.new(0, 40, 0, 40),
-    Rotation = 90,
-    Radius = 360,
-    Range = 90
+    Image = 92023845052369,           -- ID da imagem
+    Size = UDim2.new(0, 40, 0, 40),  -- Tamanho
+    Rotation = 90,                    -- Rotação base
+    Radius = 360,                     -- Raio FOV
+    Range = 90                        -- Distância do centro
 }
 ```
 
@@ -193,7 +186,7 @@ Library.Settings.Arrow = {
 
 ```luau
 Library.Settings.HighlightTransparency = {
-    Filled = 0.7,
+    Filled = 0.7,    -- 0 = Opaco | 1 = Invisível
     Outline = 0.3
 }
 ```
@@ -217,7 +210,7 @@ Library:SetTemplate("Add", {
 
 ---
 
-## 🎨 Cores Individuais
+## 🎨 Sistema de Cores
 
 ```luau
 -- Color3 único (todos os componentes usam a mesma cor)
@@ -225,11 +218,11 @@ Color = Color3.fromRGB(255, 0, 0)
 
 -- Cores individuais por componente
 Color = {
-    TracerColor = Color3,   -- Linha tracer
-    TextColor = Color3,     -- Texto (nome/distância)
-    FilledColor = Color3,   -- Preenchimento
-    OutlineColor = Color3,  -- Contorno
-    ImageColor = Color3     -- Seta
+    TracerColor = Color3.fromRGB(255, 0, 0),   -- Linha tracer
+    TextColor = Color3.fromRGB(255, 255, 255), -- Texto (nome/distância)
+    FilledColor = Color3.fromRGB(255, 0, 0),   -- Preenchimento
+    OutlineColor = Color3.fromRGB(255, 255, 0),-- Contorno
+    ImageColor = Color3.fromRGB(255, 0, 0)     -- Seta
 }
 ```
 
@@ -237,40 +230,13 @@ Color = {
 
 ## 🎯 Recursos Avançados
 
-### TypeLabel - Renderização de Texto
-
-A biblioteca agora suporta dois métodos de renderização de texto:
-
-#### Drawing (Padrão)
-```luau
-Library:Add("Enemy", {
-    Model = workspace.Enemy,
-    TypeLabel = "Drawing"  -- Usa Drawing API
-})
-```
-- ✅ Melhor performance
-- ✅ Sempre visível na tela
-- ❌ Não escala com distância
-
-#### TextLabel (BillboardGui)
-```luau
-Library:Add("NPC", {
-    Model = workspace.NPC,
-    TypeLabel = "TextLabel"  -- Usa BillboardGui com TextLabel
-})
-```
-- ✅ Escala com distância do objeto
-- ✅ Integrado ao mundo 3D
-- ✅ RichText suportado
-- ❌ Pode ter impacto maior na performance
-
 ### Métodos de Posição
 
 ```luau
 -- Position (padrão) - Usa PrimaryPart.Position ou BasePart.Position
 Method = "Position"
 
--- BoundingBox - Calcula centro da caixa delimitadora
+-- BoundingBox - Calcula centro da caixa delimitadora do modelo
 Method = "BoundingBox"
 ```
 
@@ -283,7 +249,7 @@ Library:Add("Enemy", {
 })
 ```
 
-### Collision (Renderização)
+### Collision (Renderização de Modelos Invisíveis)
 
 ```luau
 Library:Add("NPC", {
@@ -291,14 +257,11 @@ Library:Add("NPC", {
     Collision = true  -- Adiciona Humanoid e ajusta transparência para renderizar Highlight
 })
 ```
-**Nota:** Este parâmetro:
-- Cria um Humanoid se não existir (necessário para Highlight funcionar)
-- Ajusta transparência de partes invisíveis (1 → 0.99) para permitir renderização
 
 ### Acesso aos ESPs
 
 ```luau
--- Iterar todos os ESPs
+-- Iterar todos os ESPs ativos
 for id, esp in pairs(Library.ESPs) do
     print(id, esp.Name, esp.Visible)
 end
@@ -319,14 +282,11 @@ end
     Center = BasePart or nil,
     Method = string,
     Visible = boolean,
-    TypeLabel = string,
     
-    -- Componentes
+    -- Componentes (Drawing/Instance)
     Tracer = Drawing,
     TextDraw = Drawing,
-    TextLabel = TextLabel,
-    Container = BillboardGui,
-    Highlight = Instance,
+    Highlight = Highlight,
     Arrow = ImageLabel,
     
     -- Métodos
@@ -343,71 +303,125 @@ end
 
 ## 🔄 Lógica de Renderização
 
-**Dentro da tela:**
-- ✅ Highlight, Tracer, Text (Drawing ou TextLabel)
+**Dentro da tela (within FOV):**
+- ✅ Highlight, Tracer, Text
 - ❌ Arrow
 
 **Fora da tela:**
 - ❌ Highlight, Tracer, Text
 - ✅ Arrow (aponta para o alvo)
 
-**Visible = false:**
-- ❌ Todos os componentes
-
-**Fora de MaxDistance ou dentro de MinDistance:**
-- ❌ Todos os componentes
+**Condições para ocultar:**
+- ❌ `Visible = false`
+- ❌ `Library.Enabled = false`
+- ❌ `dist > MaxDistance`
+- ❌ `dist < MinDistance`
+- ❌ Model destruído/removido
 
 ---
 
-## 🛡️ Proteções e Otimizações
+## 🛡️ Segurança e Otimização
 
 ### CloneRef Protection
 ```luau
-local cloneref = (cloneref or clonereference or function(instance)   
+-- A biblioteca usa cloneref para proteção contra detecção
+local cloneref = cloneref or clonereference or function(instance)   
     return instance   
-end)
-```
-A biblioteca usa `cloneref` para proteger referências de serviços contra detecção.
-
-### GetGenv Fallback
-```luau
-local getgenv = getgenv or (function() 
-    return shared 
-end)
-```
-
-### GetHui Support
-```luau
-local gethui = gethui or function()
-    return CoreGui
 end
 ```
-Usa `gethui()` quando disponível para melhor ocultação de UIs.
 
-### Camera Auto-Update
+### Performance
+- Sistema de renderização otimizado com `RenderStepped`
+- Verificações eficientes de distância e visibilidade
+- Garbage collection automática de ESPs destruídos
+- Cálculo de BoundingBox otimizado
+
+---
+
+## 📝 Exemplos Práticos
+
+### ESP para Inimigos
+
 ```luau
-CamConnect = Workspace:GetPropertyChangedSignal("CurrentCamera"):Connect(function()
-    Camera = Workspace.CurrentCamera
-end)
+Library.Config.Tracer = true
+Library.Config.Arrow = true
+
+Library:Search({
+    Local = workspace.Enemies,
+    Targets = {"Zombie", "Skeleton"},
+    Name = "Inimigo",
+    Color = Color3.fromRGB(255, 0, 0)
+})
 ```
-Atualiza automaticamente a referência da câmera quando alterada.
+
+### ESP para Boss com Rainbow
+
+```luau
+Library:RainbowMode(true, 5)
+
+Library:Add("Boss", {
+    Model = workspace.Boss,
+    Name = "BOSS",
+    Method = "BoundingBox"
+})
+```
+
+### ESP para NPCs com Cores Customizadas
+
+```luau
+Library:Search({
+    Local = workspace.NPCs,
+    Targets = {
+        ["Merchant"] = {
+            Name = "Vendedor",
+            Color = {
+                TextColor = Color3.fromRGB(255, 255, 255),
+                FilledColor = Color3.fromRGB(0, 255, 0),
+                OutlineColor = Color3.fromRGB(255, 255, 0)
+            }
+        },
+        ["Blacksmith"] = {
+            Name = "Ferreiro",
+            Color = Color3.fromRGB(128, 128, 128)
+        }
+    }
+})
+```
+
+---
+
+## 🔧 Troubleshooting
+
+**ESP não aparece:**
+- Verifique se `Library.Enabled = true`
+- Verifique se o componente está ativo (`Library.Config.X`)
+- Confirme que o Model existe e não foi destruído
+- Verifique as configurações de distância (`MinDistance`/`MaxDistance`)
+
+**Performance ruim:**
+- Reduza `MaxDistance`
+- Desative componentes não utilizados
+- Use `:Clear()` para remover ESPs desnecessários
+
+**Arrow não funciona:**
+- Certifique-se que `Library.Config.Arrow = true`
+- Verifique se o `Arrow.Image` é um ID válido
+- Confirme que o alvo está fora do FOV
 
 ---
 
 ## 📌 Versão
 
-**Versão:** 1.0.4
+**Versão:** 1.0.5
 
-**Atualizações Recentes:**
+**Changelog:**
 - ✨ Sistema `:Search()` para busca automática
 - ✨ Suporte a cores individuais por componente
 - ✨ Controle de visibilidade individual
-- ✨ Método BoundingBox
-- ✨ TypeLabel (Drawing/TextLabel)
-- ✨ Métodos SetPrefixDistance e SetSuffixDistance
-- ✨ BillboardGui com TextLabel
-- ✨ Proteções cloneref, gethui, getgenv
-- ⚡ Otimizações de performance
+- ✨ Método BoundingBox otimizado
+- ⚡ Removido sistema de Box para melhor performance
+- ⚡ Otimizações gerais de renderização
+- 🛡️ CloneRef protection integrado
 
 ---
 
@@ -423,64 +437,4 @@ loadstring(game:HttpGet("https://raw.githubusercontent.com/DH-SOARESE/ESP-Librar
 
 ---
 
-## 💡 Exemplos de Uso
-
-### Exemplo 1: ESP Básico com Drawing
-```luau
-Library:Add("Enemy1", {
-    Model = workspace.Enemies.Zombie,
-    Name = "Zumbi",
-    TypeLabel = "Drawing",
-    Color = Color3.fromRGB(255, 0, 0)
-})
-```
-
-### Exemplo 2: ESP com TextLabel e Rainbow
-```luau
-Library.Settings.Rainbow = true
-Library:Add("Boss", {
-    Model = workspace.Boss,
-    Name = "CHEFE",
-    TypeLabel = "TextLabel",
-    PrefixDistance = "[",
-    SuffixDistance = " studs]"
-})
-```
-
-### Exemplo 3: Busca com Configurações Individuais
-```luau
-Library:Search({
-    Local = workspace.NPCs,
-    Targets = {
-        ["Merchant"] = {
-            Name = "Vendedor",
-            Color = Color3.fromRGB(0, 255, 0),
-            TypeLabel = "TextLabel"
-        },
-        ["Guard"] = {
-            Name = "Guarda",
-            Color = Color3.fromRGB(255, 255, 0),
-            TypeLabel = "Drawing"
-        }
-    }
-})
-```
-
-### Exemplo 4: ESP com Cores Individuais
-```luau
-Library:Add("Special", {
-    Model = workspace.SpecialEnemy,
-    Name = "Elite",
-    Color = {
-        TracerColor = Color3.fromRGB(255, 0, 0),
-        TextColor = Color3.fromRGB(255, 255, 255),
-        FilledColor = Color3.fromRGB(100, 0, 0),
-        OutlineColor = Color3.fromRGB(255, 255, 0),
-        ImageColor = Color3.fromRGB(255, 0, 255)
-    }
-})
-```
-
----
-
-**Feito para a comunidade Roblox**
+**Feito com ❤️ para a comunidade Roblox**
