@@ -58,8 +58,9 @@ local Library = {
         MinDistance = 5,
         
         Decimal = false,
-        FontSize = 10,
-        Font = 2,
+        FontSize = 20,
+        FontDraw = 2,
+        FontTextLabel = Enum.Font.Code,
         
         Rainbow = false,
         RainbowDelay = 8,
@@ -209,29 +210,30 @@ function Library:Add(idx, info: table?)
         
         Color = info.Color or self.Template.Add.Color,
         
-        Method = info.Method or "Position"
+        Method = info.Method or "Position",
+        TypeLabel = info.TypeLabel or "Drawing"
     }
 
     ESP.Tracer = NewDrawing("Line", { 
-        Color = ESP.Color == "table" and ESP.Color.TracerColor or ESP.Color,
+        Color = typeof(ESP.Color) == "table" and ESP.Color.TracerColor or ESP.Color,
         Thickness = 1,
         Visible = false 
     })
     
     ESP.TextDraw = NewDrawing("Text", { 
-        Text = ESP.Name or "",
+        Text = "",
         Size = self.Settings.FontSize,
-        Font = self.Settings.Font,
-        Color = ESP.Color == "table" and ESP.Color.TextColor or ESP.Color,
+        Font = self.Settings.FontDraw,
+        Color = typeof(ESP.Color) == "table" and ESP.Color.TextColor or ESP.Color,
         Center = true, 
         Outline = true, 
-        Visible = false
+        Visible = ESP.TypeLabel ~= "TextLabel"
     })
     
     ESP.Highlight = New("Highlight", {
         Adornee = ESP.Model,
-        FillColor = ESP.Color == "table" and ESP.Color.FilledColor or ESP.Color,
-        OutlineColor = ESP.Color == "table" and ESP.Color.OutlineColor or ESP.Color,
+        FillColor = typeof(ESP.Color) == "table" and ESP.Color.FilledColor or ESP.Color,
+        OutlineColor = typeof(ESP.Color) == "table" and ESP.Color.OutlineColor or ESP.Color,
         FillTransparency = self.Config.Filled and self.Settings.HighlightTransparency.Filled or 1,
         OutlineTransparency = self.Config.Outline and self.Settings.HighlightTransparency.Outline or 1,
         Enabled = false,
@@ -242,11 +244,33 @@ function Library:Add(idx, info: table?)
         BackgroundTransparency = 1,
         Size = self.Settings.Arrow.Size,
         Image = "rbxassetid://" .. tostring(self.Settings.Arrow.Image),
-        ImageColor3 = ESP.Color == "table" and ESP.Color.ImageColor or ESP.Color,
+        ImageColor3 = typeof(ESP.Color) == "table" and ESP.Color.ImageColor or ESP.Color,
         Visible = false,
         Parent = ArrowMain
     })
     
+    ESP.Container = New("BillboardGui", {
+        Adornee = ESP.Center and ESP.Center or ESP.Model,
+        AlwaysOnTop = true,
+        Size = UDim2.new(0, 100, 0, 50),
+        StudsOffset = Vector3.new(0, 0, 0),
+        MaxDistance = Library.Settings.MaxDistance,
+        Parent = gethui()
+    })
+    
+    ESP.TextLabel = New("TextLabel", {
+        Text = "",
+        TextColor3 = Color3.new(1, 1, 1),
+        TextScaled = true,
+        RichText = true,        
+        Font = self.Settings.FontTextLabel,
+        BackgroundTransparency = 1,
+        Size = UDim2.new(0, self.Settings.FontSize * 10, 0, self.Settings.FontSize),
+        TextStrokeColor3 = 0,
+        Visible = TypeLabel ~= "Drawing",
+        Parent = ESP.Container
+    })
+
     if info.Collision then
         if not ESP.Model:FindFirstChildWhichIsA("Humanoid", false) then
             New("Humanoid", { 
@@ -286,6 +310,7 @@ function Library:Add(idx, info: table?)
         if self.TextDraw then self.TextDraw:Remove() end
         if self.Box then self.Box:Remove() end
         if self.Highlight then self.Highlight:Destroy() end
+        if self.TextLabel then self.TextLabel:Destroy() end
         if self.Arrow then self.Arrow:Destroy() end
         self = nil
     end   
@@ -375,6 +400,7 @@ function Library:Remove(idx)
         if ESPs[idx].TextDraw then ESPs[idx].TextDraw:Remove() end
         if ESPs[idx].Box then ESPs[idx].Box:Remove() end
         if ESPs[idx].Highlight then ESPs[idx].Highlight:Destroy() end
+        if ESPs[idx].TextLabel then ESPs[idx].TextLabel:Destroy() end
         if ESPs[idx].Arrow then ESPs[idx].Arrow:Destroy() end
         ESPs[idx] = nil
     end
@@ -439,6 +465,7 @@ end
 
 RunConnect = RunService.RenderStepped:Connect(function()
     if not Camera then return end
+    
     local vs = Camera.ViewportSize
     local cameraPos = Camera.CFrame.Position
 
@@ -447,6 +474,7 @@ RunConnect = RunService.RenderStepped:Connect(function()
             if ESP.Tracer then ESP.Tracer.Visible = false end
             if ESP.TextDraw then ESP.TextDraw.Visible = false end
             if ESP.Highlight then ESP.Highlight.Enabled = false end
+            if ESP.TextLabel then ESP.TextLabel.Visible = false end
             if ESP.Arrow then ESP.Arrow.Visible = false end
             continue
         end
@@ -465,6 +493,7 @@ RunConnect = RunService.RenderStepped:Connect(function()
             if ESP.Tracer then ESP.Tracer.Visible = false end
             if ESP.TextDraw then ESP.TextDraw.Visible = false end
             if ESP.Highlight then ESP.Highlight.Enabled = false end
+            if ESP.TextLabel then ESP.TextLabel.Visible = false end
             if ESP.Arrow then ESP.Arrow.Visible = false end
             continue
         end
@@ -476,6 +505,7 @@ RunConnect = RunService.RenderStepped:Connect(function()
             if ESP.Tracer then ESP.Tracer.Visible = false end
             if ESP.TextDraw then ESP.TextDraw.Visible = false end
             if ESP.Highlight then ESP.Highlight.Enabled = false end
+            if ESP.TextLabel then ESP.TextLabel.Visible = false end
             if ESP.Arrow then ESP.Arrow.Visible = false end
             continue
         end
@@ -499,9 +529,9 @@ RunConnect = RunService.RenderStepped:Connect(function()
         if ESP.Highlight then
             ESP.Highlight.FillTransparency = Library.Config.Filled and Library.Settings.HighlightTransparency.Filled or 1
             ESP.Highlight.OutlineTransparency = Library.Config.Outline and Library.Settings.HighlightTransparency.Outline or 1
-            ESP.Highlight.Enabled = Library.Enabled and within_fov
-            ESP.Highlight.FillColor = Library.Settings.Rainbow and RainbowColor or ESP.Color == "table" and ESP.Color.FilledColor or ESP.Color
-            ESP.Highlight.OutlineColor = Library.Settings.Rainbow and RainbowColor or ESP.Color == "table" and ESP.Color.OutlineColor or ESP.Color
+            ESP.Highlight.Enabled = within_fov 
+            ESP.Highlight.FillColor = Library.Settings.Rainbow and RainbowColor or typeof(ESP.Color) == "table" and ESP.Color.FilledColor or ESP.Color
+            ESP.Highlight.OutlineColor = Library.Settings.Rainbow and RainbowColor or typeof(ESP.Color) == "table" and ESP.Color.OutlineColor or ESP.Color
         end
 
         if within_fov then
@@ -509,7 +539,7 @@ RunConnect = RunService.RenderStepped:Connect(function()
                 local originPos = (Origin[Library.Settings.TracerOrigin] or Origin.Bottom)(vs)
                 ESP.Tracer.From = originPos
                 ESP.Tracer.To = pos
-                ESP.Tracer.Color = Library.Settings.Rainbow and RainbowColor or ESP.Color == "table" and ESP.Color.TracerColor or ESP.Color
+                ESP.Tracer.Color = Library.Settings.Rainbow and RainbowColor or typeof(ESP.Color) == "table" and ESP.Color.TracerColor or ESP.Color
                 ESP.Tracer.Visible = true
             elseif ESP.Tracer then
                 ESP.Tracer.Visible = false
@@ -523,17 +553,36 @@ RunConnect = RunService.RenderStepped:Connect(function()
                     if text ~= "" then text = text.."\n"..distText else text = distText end
                 end
                 ESP.TextDraw.Text = text
-                ESP.TextDraw.Font = Library.Settings.Font
+                ESP.TextDraw.Font = Library.Settings.FontDraw
                 ESP.TextDraw.Size = Library.Settings.FontSize
                 ESP.TextDraw.Position = pos + Vector2.new(0, -ESP.TextDraw.TextBounds.Y - 5)
-                ESP.TextDraw.Color = Library.Settings.Rainbow and RainbowColor or ESP.Color == "table" and ESP.Color.TextColor or ESP.Color
-                ESP.TextDraw.Visible = true
+                ESP.TextDraw.Color = Library.Settings.Rainbow and RainbowColor or typeof(ESP.Color) == "table" and ESP.Color.TextColor or ESP.Color
+                ESP.TextDraw.Visible = (ESP.TypeLabel == "Drawing")
+            end
+            
+            if ESP.TextLabel then
+                ESP.TextLabel.Text = string.format("%s\n%s", 
+                    (Library.Config.Name and 
+                        ESP.Name
+                    or ""), 
+                    (Library.Config.Distance and 
+                        ESP.PrefixDistance .. (Library.Settings.Decimal and string.format("%.1f", dist) or math.floor(dist)) .. ESP.SuffixDistance
+                    )
+                )
+                ESP.TextLabel.Font = Library.Settings.FontTextLabel
+                ESP.TextLabel.TextStrokeTransparency = 0
+                ESP.TextLabel.Size = UDim2.new(0, Library.Settings.FontSize * 10, 0, Library.Settings.FontSize)
+                ESP.TextLabel.TextColor3 = Library.Settings.Rainbow and RainbowColor or (typeof(ESP.Color) == "table" and ESP.Color.TextColor or ESP.Color)
+                ESP.TextLabel.AnchorPoint = Vector2.new(0.5, 0.5)
+                ESP.TextLabel.Position = UDim2.fromScale(0.5, 0.5)
+                ESP.TextLabel.Visible = (ESP.TypeLabel == "TextLabel")
             end
 
             if ESP.Arrow then ESP.Arrow.Visible = false end
         else
             if ESP.Tracer then ESP.Tracer.Visible = false end
             if ESP.TextDraw then ESP.TextDraw.Visible = false end
+            if ESP.TextLabel then ESP.TextLabel.Visible = false end
 
             if Library.Config.Arrow and ESP.Arrow and Library.Enabled then
                 local arrowDir = inFront and dir or -dir
@@ -546,7 +595,7 @@ RunConnect = RunService.RenderStepped:Connect(function()
                 local angle = math.atan2(normalizedDir.Y, normalizedDir.X)
                 ESP.Arrow.Rotation = math.deg(angle) + Library.Settings.Arrow.Rotation
                 ESP.Arrow.Image = "rbxassetid://"..tostring(Library.Settings.Arrow.Image)
-                ESP.Arrow.ImageColor3 = Library.Settings.Rainbow and RainbowColor or ESP.Color == "table" and ESP.Color.ImageColor or ESP.Color
+                ESP.Arrow.ImageColor3 = Library.Settings.Rainbow and RainbowColor or typeof(ESP.Color) == "table" and ESP.Color.ImageColor or ESP.Color
                 ESP.Arrow.Size = Library.Settings.Arrow.Size
                 ESP.Arrow.Visible = true
             elseif ESP.Arrow then
