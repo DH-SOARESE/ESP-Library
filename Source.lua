@@ -472,7 +472,7 @@ RunConnect = RunService.RenderStepped:Connect(function()
         local pos3d = Camera:WorldToViewportPoint(targetPos)
         local dist = (targetPos - cameraPos).Magnitude
 
-        if (dist > Library.Settings.MaxDistance or dist < Library.Settings.MinDistance) or not ESP.Visible then
+        if (dist > Library.Settings.MaxDistance or dist < Library.Settings.MinDistance) or not ESP.Visible or not Library.Enabled then
             if ESP.Tracer then ESP.Tracer.Visible = false end
             if ESP.TextDraw then ESP.TextDraw.Visible = false end
             if ESP.Highlight then ESP.Highlight.Enabled = false end
