@@ -311,6 +311,7 @@ function Library:Add(idx, info: table?)
         if self.Box then self.Box:Remove() end
         if self.Highlight then self.Highlight:Destroy() end
         if self.TextLabel then self.TextLabel:Destroy() end
+        if self.Container then self.Container:Destroy() end
         if self.Arrow then self.Arrow:Destroy() end
         self = nil
     end   
@@ -401,6 +402,7 @@ function Library:Remove(idx)
         if ESPs[idx].Box then ESPs[idx].Box:Remove() end
         if ESPs[idx].Highlight then ESPs[idx].Highlight:Destroy() end
         if ESPs[idx].TextLabel then ESPs[idx].TextLabel:Destroy() end
+        if ESPs[idx].Container then ESPs[idx].Container:Destroy() end
         if ESPs[idx].Arrow then ESPs[idx].Arrow:Destroy() end
         ESPs[idx] = nil
     end
@@ -475,6 +477,7 @@ RunConnect = RunService.RenderStepped:Connect(function()
             if ESP.TextDraw then ESP.TextDraw.Visible = false end
             if ESP.Highlight then ESP.Highlight.Enabled = false end
             if ESP.TextLabel then ESP.TextLabel.Visible = false end
+            if ESP.Container then ESP.Container.Enabled = false end
             if ESP.Arrow then ESP.Arrow.Visible = false end
             continue
         end
@@ -494,6 +497,7 @@ RunConnect = RunService.RenderStepped:Connect(function()
             if ESP.TextDraw then ESP.TextDraw.Visible = false end
             if ESP.Highlight then ESP.Highlight.Enabled = false end
             if ESP.TextLabel then ESP.TextLabel.Visible = false end
+            if ESP.Container then ESP.Container.Enabled = false end
             if ESP.Arrow then ESP.Arrow.Visible = false end
             continue
         end
@@ -506,6 +510,7 @@ RunConnect = RunService.RenderStepped:Connect(function()
             if ESP.TextDraw then ESP.TextDraw.Visible = false end
             if ESP.Highlight then ESP.Highlight.Enabled = false end
             if ESP.TextLabel then ESP.TextLabel.Visible = false end
+            if ESP.Container then ESP.Container.Enabled = false end
             if ESP.Arrow then ESP.Arrow.Visible = false end
             continue
         end
