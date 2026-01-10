@@ -8,10 +8,6 @@ local CoreGui = cloneref(game:GetService("CoreGui"))
 local Workspace = cloneref(game:GetService("Workspace"))
 local UserInputService = cloneref(game:GetService("UserInputService"))
 
-local getgenv = getgenv or (function() 
-    return shared 
-end)
-
 local LocalPlayer = Players.LocalPlayer
 local Camera = Workspace.CurrentCamera
 
@@ -571,8 +567,8 @@ RunConnect = RunService.RenderStepped:Connect(function()
                         ESP.Name
                     or ""), 
                     (Library.Config.Distance and 
-                        ESP.PrefixDistance .. (Library.Settings.Decimal and string.format("%.1f", dist) or math.floor(dist)) .. ESP.SuffixDistance
-                    )
+                        ESP.PrefixDistance .. (Library.Settings.Decimal and string.format("%.1f", dist) or math.floor(dist)) .. ESP.SuffixDistance 
+                    or "")
                 )
                 ESP.TextLabel.Font = Library.Settings.FontTextLabel
                 ESP.TextLabel.TextStrokeTransparency = 0
