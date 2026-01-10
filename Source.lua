@@ -54,9 +54,8 @@ local Library = {
         MinDistance = 5,
         
         Decimal = false,
-        FontSize = 20,
-        FontDraw = 2,
-        FontTextLabel = Enum.Font.Code,
+        FontSize = 10,
+        Font = 2,
         
         Rainbow = false,
         RainbowDelay = 8,
@@ -206,8 +205,7 @@ function Library:Add(idx, info: table?)
         
         Color = info.Color or self.Template.Add.Color,
         
-        Method = info.Method or "Position",
-        TypeLabel = info.TypeLabel or "Drawing"
+        Method = info.Method or "Position"
     }
 
     ESP.Tracer = NewDrawing("Line", { 
@@ -244,33 +242,10 @@ function Library:Add(idx, info: table?)
         Visible = false,
         Parent = ArrowMain
     })
-    
-    ESP.Container = New("BillboardGui", {
-        Adornee = ESP.Center and ESP.Center or ESP.Model,
-        AlwaysOnTop = true,
-        Size = UDim2.new(0, 100, 0, 50),
-        StudsOffset = Vector3.new(0, 0, 0),
-        MaxDistance = Library.Settings.MaxDistance,
-        Parent = gethui()
-    })
-    
-    ESP.TextLabel = New("TextLabel", {
-        Text = "",
-        TextColor3 = Color3.new(1, 1, 1),
-        TextScaled = true,
-        RichText = true,        
-        Font = self.Settings.FontTextLabel,
-        BackgroundTransparency = 1,
-        Size = UDim2.new(0, self.Settings.FontSize * 10, 0, self.Settings.FontSize),
-        TextStrokeColor3 = 0,
-        Visible = TypeLabel ~= "Drawing",
-        Parent = ESP.Container
-    })
 
     if info.Collision then
         if not ESP.Model:FindFirstChildWhichIsA("Humanoid", false) then
-            New("Humanoid", { 
-                Name = "ESP",
+            ESP.Humanoid = New("Humanoid", { 
                 Parent = ESP.Model
             })
         end
@@ -306,8 +281,7 @@ function Library:Add(idx, info: table?)
         if self.TextDraw then self.TextDraw:Remove() end
         if self.Box then self.Box:Remove() end
         if self.Highlight then self.Highlight:Destroy() end
-        if self.TextLabel then self.TextLabel:Destroy() end
-        if self.Container then self.Container:Destroy() end
+        if self.Humanoid then self.Humanoid:Destroy() end
         if self.Arrow then self.Arrow:Destroy() end
         self = nil
     end   
@@ -397,9 +371,8 @@ function Library:Remove(idx)
         if ESPs[idx].TextDraw then ESPs[idx].TextDraw:Remove() end
         if ESPs[idx].Box then ESPs[idx].Box:Remove() end
         if ESPs[idx].Highlight then ESPs[idx].Highlight:Destroy() end
-        if ESPs[idx].TextLabel then ESPs[idx].TextLabel:Destroy() end
-        if ESPs[idx].Container then ESPs[idx].Container:Destroy() end
         if ESPs[idx].Arrow then ESPs[idx].Arrow:Destroy() end
+        if ESPs[idx].Humanoid then ESPs[idx].Humanoid:Destroy() end
         ESPs[idx] = nil
     end
 end
@@ -472,8 +445,6 @@ RunConnect = RunService.RenderStepped:Connect(function()
             if ESP.Tracer then ESP.Tracer.Visible = false end
             if ESP.TextDraw then ESP.TextDraw.Visible = false end
             if ESP.Highlight then ESP.Highlight.Enabled = false end
-            if ESP.TextLabel then ESP.TextLabel.Visible = false end
-            if ESP.Container then ESP.Container.Enabled = false end
             if ESP.Arrow then ESP.Arrow.Visible = false end
             continue
         end
@@ -492,8 +463,6 @@ RunConnect = RunService.RenderStepped:Connect(function()
             if ESP.Tracer then ESP.Tracer.Visible = false end
             if ESP.TextDraw then ESP.TextDraw.Visible = false end
             if ESP.Highlight then ESP.Highlight.Enabled = false end
-            if ESP.TextLabel then ESP.TextLabel.Visible = false end
-            if ESP.Container then ESP.Container.Enabled = false end
             if ESP.Arrow then ESP.Arrow.Visible = false end
             continue
         end
@@ -505,8 +474,6 @@ RunConnect = RunService.RenderStepped:Connect(function()
             if ESP.Tracer then ESP.Tracer.Visible = false end
             if ESP.TextDraw then ESP.TextDraw.Visible = false end
             if ESP.Highlight then ESP.Highlight.Enabled = false end
-            if ESP.TextLabel then ESP.TextLabel.Visible = false end
-            if ESP.Container then ESP.Container.Enabled = false end
             if ESP.Arrow then ESP.Arrow.Visible = false end
             continue
         end
@@ -547,36 +514,23 @@ RunConnect = RunService.RenderStepped:Connect(function()
             end
 
             if ESP.TextDraw then
-                local text = ""
-                if Library.Config.Name then text = ESP.Name end
-                if Library.Config.Distance then
-                    local distText = ESP.PrefixDistance .. (Library.Settings.Decimal and string.format("%.1f", dist) or math.floor(dist)) .. ESP.SuffixDistance
-                    if text ~= "" then text = text.."\n"..distText else text = distText end
-                end
-                ESP.TextDraw.Text = text
-                ESP.TextDraw.Font = Library.Settings.FontDraw
-                ESP.TextDraw.Size = Library.Settings.FontSize
-                ESP.TextDraw.Position = pos + Vector2.new(0, -ESP.TextDraw.TextBounds.Y - 5)
-                ESP.TextDraw.Color = Library.Settings.Rainbow and RainbowColor or typeof(ESP.Color) == "table" and ESP.Color.TextColor or ESP.Color
-                ESP.TextDraw.Visible = (ESP.TypeLabel == "Drawing")
-            end
-            
-            if ESP.TextLabel then
-                ESP.TextLabel.Text = string.format("%s\n%s", 
+                ESP.TextDraw.Text = string.format("%s\n%s", 
                     (Library.Config.Name and 
                         ESP.Name
                     or ""), 
                     (Library.Config.Distance and 
-                        ESP.PrefixDistance .. (Library.Settings.Decimal and string.format("%.1f", dist) or math.floor(dist)) .. ESP.SuffixDistance 
+                        string.format("%s" .. (Library.Settings.Decimal and "%.1f" or "%d") .. "%s", 
+                            ESP.PrefixDistance, 
+                            dist, 
+                            ESP.SuffixDistance
+                        )
                     or "")
                 )
-                ESP.TextLabel.Font = Library.Settings.FontTextLabel
-                ESP.TextLabel.TextStrokeTransparency = 0
-                ESP.TextLabel.Size = UDim2.new(0, Library.Settings.FontSize * 10, 0, Library.Settings.FontSize)
-                ESP.TextLabel.TextColor3 = Library.Settings.Rainbow and RainbowColor or (typeof(ESP.Color) == "table" and ESP.Color.TextColor or ESP.Color)
-                ESP.TextLabel.AnchorPoint = Vector2.new(0.5, 0.5)
-                ESP.TextLabel.Position = UDim2.fromScale(0.5, 0.5)
-                ESP.TextLabel.Visible = (ESP.TypeLabel == "TextLabel")
+                ESP.TextDraw.Font = Library.Settings.Font
+                ESP.TextDraw.Size = Library.Settings.FontSize
+                ESP.TextDraw.Position = pos + Vector2.new(0, -ESP.TextDraw.TextBounds.Y - 5)
+                ESP.TextDraw.Color = Library.Settings.Rainbow and RainbowColor or typeof(ESP.Color) == "table" and ESP.Color.TextColor or ESP.Color
+                ESP.TextDraw.Visible = true
             end
 
             if ESP.Arrow then ESP.Arrow.Visible = false end
